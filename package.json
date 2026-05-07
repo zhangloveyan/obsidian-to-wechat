@@ -1,0 +1,33 @@
+{
+  "name": "obsidian-to-wechat",
+  "version": "0.1.0",
+  "description": "Preview, style, and publish Obsidian Markdown notes to multiple WeChat Official Accounts.",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production"
+  },
+  "keywords": [
+    "obsidian",
+    "plugin",
+    "wechat",
+    "publisher"
+  ],
+  "author": "Ancle",
+  "license": "AGPL-3.0",
+  "devDependencies": {
+    "@types/node": "^16.11.6",
+    "@typescript-eslint/eslint-plugin": "5.29.0",
+    "@typescript-eslint/parser": "5.29.0",
+    "builtin-modules": "3.3.0",
+    "esbuild": "0.25.0",
+    "obsidian": "latest",
+    "tslib": "2.4.0",
+    "typescript": "4.7.4"
+  },
+  "dependencies": {
+    "highlight.js": "^11.11.1",
+    "juice": "^11.1.0",
+    "nanoid": "^5.1.5"
+  }
+}

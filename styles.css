@@ -1,0 +1,993 @@
+/* src/styles/view/layout.css */
+/* ===== 基础布局 ===== */
+.otw-view-content {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+}
+
+/* ===== 工具栏 ===== */
+.otw-toolbar {
+    padding: 8px 10px !important;
+    flex-shrink: 0 !important;
+    background: var(--background-secondary);
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+
+/* ===== 预览区域 ===== */
+/* .otw-preview-area 定义在 preview.css 中 */
+
+/* 控件组布局 */
+.otw-controls-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    min-width: 0;
+}
+
+/* ===== 按钮基础样式 ===== */
+.otw-controls-group button {
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-primary);
+    color: var(--text-normal);
+    font-size: 14px;
+    box-shadow: 0 1px 3px var(--background-modifier-box-shadow);
+    flex: 0 0 auto;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* 按钮文本样式 */
+.otw-controls-group button span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.otw-controls-group button:hover {
+    background: var(--background-modifier-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px var(--background-modifier-box-shadow);
+}
+
+.otw-controls-group button:disabled {
+    opacity: 0.5;
+    background: var(--background-primary) !important;
+    color: var(--text-muted) !important;
+    cursor: not-allowed !important;
+    transform: none;
+    border-color: var(--background-modifier-border) !important;
+    box-shadow: none;
+}
+
+/* 特殊按钮样式 */
+.otw-controls-group .otw-refresh-button {
+    width: 36px;
+    padding: 0;
+    flex: none;
+    margin: 0;
+}
+
+.otw-controls-group .otw-copy-button {
+    background-color: var(--text-accent);
+    color: var(--text-on-accent);
+    border: none;
+}
+.otw-controls-group .otw-copy-button:hover {
+    color: var(--text-on-accent);
+    background-color: var(--text-accent);
+}
+
+/* ===== 下拉选择器 ===== */
+.custom-select-container {
+    position: relative;
+    min-width: 80px;
+    max-width: 160px;
+    flex: 0 1 160px;
+}
+
+.custom-select {
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    background: var(--background-primary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+    color: var(--text-normal);
+    box-shadow: 0 1px 3px var(--background-modifier-box-shadow);
+    white-space: nowrap;
+    overflow: hidden;
+}
+.selected-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+}
+.custom-select:hover {
+    background: var(--background-modifier-hover);
+    box-shadow: 0 2px 6px var(--background-modifier-box-shadow);
+}
+
+.custom-select.disabled {
+    opacity: 0.5;
+    background: var(--background-secondary) !important;
+    color: var(--text-muted) !important;
+    border-color: var(--background-modifier-border) !important;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.select-arrow {
+    color: var(--text-normal);
+    font-size: 12px;
+    transition: transform 0.2s ease;
+    margin-left: 4px;
+    flex-shrink: 0;
+}
+
+.select-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    width: 100%;
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px var(--background-modifier-box-shadow);
+    display: none;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.select-dropdown.show {
+    display: block;
+}
+
+.select-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-normal);
+}
+
+.select-item:hover {
+    background: var(--background-modifier-hover);
+}
+
+.select-item.selected {
+    background: var(--background-modifier-hover);
+    color: var(--text-accent);
+}
+
+/* 空文件，预留 */
+
+/* src/styles/view/preview.css */
+/* ===== 预览区域 ===== */
+.otw-preview-area {
+    flex: 1 1 0;
+    min-height: 0;
+    padding: 10px 20px 20px 20px;
+    margin: 10px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: #fcfcfc;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(82, 144, 220, 0.08);
+}
+
+/* 段落 */
+.otw-content-section p {
+    margin: 0;
+    padding: 0;
+}
+
+/* 列表 */
+.otw-content-section ul,ol {
+    margin: 0;
+    padding: 0;
+}
+
+/* 链接样式 */
+.otw-content-section a {
+    color: var(--text-accent);
+    text-decoration: none;
+}
+
+/* 表格样式 */
+.otw-content-section table {
+    border-collapse: collapse;
+    margin: 1em 0;
+    width: 100%;
+}
+
+.otw-content-section th,
+.otw-content-section td {
+    border: 1px solid var(--background-modifier-border);
+    padding: 8px;
+}
+
+/* 分割线样式 */
+.otw-content-section hr {
+    border: none;
+    border-top: 1px solid var(--background-modifier-border);
+    margin: 20px 0;
+}
+
+/* 删除线样式 */
+.otw-content-section del {
+    text-decoration: line-through;
+}
+
+/* 任务列表样式 */
+.otw-content-section .task-list-item {
+    list-style: none;
+}
+
+.otw-content-section .task-list-item input[type="checkbox"] {
+    margin-right: 6px;
+}
+
+/* 脚注样式 */
+.otw-content-section .footnote-ref,
+.otw-content-section .footnote-backref {
+    color: var(--text-accent);
+    text-decoration: none;
+}
+
+/* 图片样式 */
+.otw-content-section img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1em auto;
+}
+
+/* 代码块样式 — 代码块现由 converter.ts 直接注入 inline style，
+   此处仅保留不影响预览的兜底样式（去掉 !important 避免冲突） */
+.otw-content-section pre {
+    overflow-x: auto;
+    white-space: pre;
+    word-break: normal;
+    tab-size: 4;
+    padding: 1em;
+    margin: 1em 0;
+    background: #f5f5f5;
+    border-radius: 6px;
+}
+
+.otw-content-section pre code {
+    white-space: pre;
+    word-break: normal;
+    overflow-wrap: normal;
+    font-family: "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace;
+}
+
+/* 行内代码样式 */
+.otw-content-section code:not(pre code) {
+    word-break: break-word;
+    background: #f5f5f5;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+/* 引用块样式 */
+.otw-content-section blockquote p {
+    margin: 0;
+    padding: 0;
+    line-height: inherit;
+}
+
+
+
+.otw-empty-message {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    color: var(--text-muted);
+    font-size: 16px;
+}
+
+
+/* src/styles/settings/settings.css */
+/* 整体容器 */
+.otw-settings {
+    margin: 0 auto;
+    padding: 20px;
+    background-color: var(--background-primary);
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 标题样式 */
+.otw-settings h2 {
+    margin: 20px 0;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--background-modifier-border);
+    font-size: 1.6em;
+    color: var(--text-normal);
+}
+
+/* src/styles/theme-editor.css */
+/* ===== 主题编辑器 ===== */
+
+/* 整体布局 */
+.otw-theme-editor {
+    display: flex;
+    flex-direction: column;
+}
+
+.otw-theme-editor .modal {
+    max-width: 90vw !important;
+    width: 90vw !important;
+    height: 85vh !important;
+    padding: 0 !important;
+    overflow: hidden;
+}
+
+/* 主布局：左侧 + 右侧 */
+.otw-theme-editor-layout {
+    display: flex;
+    height: 85vh;
+    overflow: hidden;
+}
+
+/* 左侧面板 */
+.otw-theme-editor-sidebar {
+    width: 200px;
+    min-width: 200px;
+    background: var(--background-secondary);
+    border-right: 1px solid var(--background-modifier-border);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.otw-theme-editor-sidebar h3 {
+    margin: 0 0 12px;
+    font-size: 14px;
+    color: var(--text-normal);
+}
+
+.otw-theme-editor-add-btn {
+    width: 100%;
+    padding: 8px;
+    border: 1px dashed var(--background-modifier-border);
+    border-radius: 6px;
+    background: var(--background-primary);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 13px;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+}
+
+.otw-theme-editor-add-btn:hover {
+    border-color: var(--interactive-accent);
+    color: var(--interactive-accent);
+}
+
+.otw-theme-editor-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.otw-theme-editor-item {
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-normal);
+    transition: all 0.15s;
+}
+
+.otw-theme-editor-item:hover {
+    background: var(--background-modifier-hover);
+}
+
+.otw-theme-editor-item.active {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+}
+
+/* 右侧主区域 */
+.otw-theme-editor-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.otw-theme-editor-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--background-modifier-border);
+    background: var(--background-primary);
+}
+
+.otw-theme-editor-name-input {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    background: var(--background-secondary);
+    color: var(--text-normal);
+    font-size: 14px;
+}
+
+.otw-theme-editor-name-input:focus {
+    outline: none;
+    border-color: var(--interactive-accent);
+}
+
+.otw-theme-editor-header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.otw-theme-editor-delete-btn,
+.otw-theme-editor-close-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-primary);
+    color: var(--text-normal);
+    transition: all 0.2s;
+}
+
+.otw-theme-editor-delete-btn:hover {
+    border-color: var(--text-error);
+    color: var(--text-error);
+}
+
+.otw-theme-editor-close-btn:hover {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border-color: var(--interactive-accent);
+}
+
+/* 下半区 */
+.otw-theme-editor-bottom {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Tab 栏 */
+.otw-theme-editor-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--background-modifier-border);
+    background: var(--background-secondary);
+    padding: 0 8px;
+    overflow-x: auto;
+    flex-shrink: 0;
+}
+
+.otw-theme-editor-tab {
+    padding: 10px 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.15s;
+}
+
+.otw-theme-editor-tab:hover {
+    color: var(--text-normal);
+}
+
+.otw-theme-editor-tab.active {
+    color: var(--interactive-accent);
+    border-bottom-color: var(--interactive-accent);
+}
+
+/* 编辑+预览分栏 */
+.otw-theme-editor-split {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+/* 编辑区 */
+.otw-theme-editor-editor {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    min-width: 0;
+}
+
+.otw-theme-editor-tab-content {
+    max-width: 500px;
+}
+
+.otw-theme-editor-tab-content h4 {
+    margin: 0 0 16px;
+    font-size: 15px;
+    color: var(--text-normal);
+    border-bottom: 1px solid var(--background-modifier-border);
+    padding-bottom: 8px;
+}
+
+.otw-theme-editor-tab-content h5 {
+    margin: 16px 0 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* 表单字段 */
+.otw-theme-editor-field {
+    margin-bottom: 12px;
+}
+
+.otw-theme-editor-field label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.otw-theme-editor-input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    background: var(--background-primary);
+    color: var(--text-normal);
+    font-size: 13px;
+    font-family: "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace;
+}
+
+.otw-theme-editor-input:focus {
+    outline: none;
+    border-color: var(--interactive-accent);
+}
+
+.otw-theme-editor-textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 8px 10px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    background: var(--background-primary);
+    color: var(--text-normal);
+    font-size: 12px;
+    font-family: "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+.otw-theme-editor-textarea:focus {
+    outline: none;
+    border-color: var(--interactive-accent);
+}
+
+/* 颜色选择器 */
+.otw-theme-editor-field-color {
+    display: flex;
+    flex-direction: column;
+}
+
+.otw-theme-editor-color-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.otw-theme-editor-color {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.otw-theme-editor-title-section {
+    margin-bottom: 16px;
+    padding: 12px;
+    border-radius: 8px;
+    background: var(--background-secondary);
+}
+
+/* 预览区 */
+.otw-theme-editor-preview-area {
+    flex: 1;
+    border-left: 1px solid var(--background-modifier-border);
+    background: var(--background-secondary);
+    padding: 16px;
+    overflow-y: auto;
+    min-width: 0;
+}
+
+.otw-theme-editor-preview-area h4 {
+    margin: 0 0 12px;
+    font-size: 13px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.otw-theme-editor-preview-content {
+    background: #fcfcfc;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.otw-theme-editor-preview-content .otw-content-section {
+    font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+}
+
+.otw-theme-editor-preview-content pre {
+    overflow-x: auto;
+    white-space: pre !important;
+    word-break: normal !important;
+    tab-size: 4 !important;
+}
+
+.otw-theme-editor-preview-content pre code {
+    white-space: pre !important;
+    word-break: normal !important;
+}
+
+.otw-theme-editor-preview-content img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1em auto;
+}
+
+.otw-theme-editor-preview-content table {
+    border-collapse: collapse;
+    margin: 1em 0;
+    width: 100%;
+}
+
+.otw-theme-editor-preview-content th,
+.otw-theme-editor-preview-content td {
+    border: 1px solid var(--background-modifier-border);
+    padding: 8px;
+}
+
+.otw-theme-editor-preview-content hr {
+    border: none;
+    border-top: 1px solid var(--background-modifier-border);
+    margin: 20px 0;
+}
+
+.otw-theme-editor-preview-content a {
+    color: var(--interactive-accent);
+    text-decoration: none;
+}
+
+.otw-theme-editor-preview-content code:not(pre code) {
+    background: #f5f5f5;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+/* src/styles/index.css */
+/* ===== 通用弹窗组件 ===== */
+.otw-modal-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    background: var(--background-primary);
+    color: var(--text-normal);
+    font-size: 14px;
+    box-sizing: border-box;
+    line-height: 1.5;
+}
+
+.otw-publish-field select.otw-modal-input {
+    cursor: pointer;
+    line-height: 1.6 !important;
+    min-height: 36px !important;
+    height: auto !important;
+    padding: 10px 12px !important;
+}
+
+.otw-modal-input:focus {
+    outline: none;
+    border-color: var(--interactive-accent);
+    box-shadow: 0 0 0 2px var(--interactive-accent-hover);
+}
+
+/* ===== 封面图选择弹窗 ===== */
+.otw-cover-modal h2 {
+    margin: 0 0 12px;
+}
+
+.otw-modal-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--background-modifier-border);
+    margin-bottom: 15px;
+}
+
+.otw-modal-tab {
+    padding: 10px 20px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.otw-modal-tab:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+.otw-modal-tab.active {
+    border-bottom-color: var(--interactive-accent);
+    color: var(--interactive-accent);
+    font-weight: 600;
+}
+
+.otw-modal-content {
+    min-height: 200px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.otw-modal-content-hidden {
+    display: none !important;
+}
+
+.otw-modal-image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+    padding: 10px;
+}
+
+.otw-modal-image-item {
+    border: 2px solid var(--background-modifier-border);
+    border-radius: 4px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: border-color 0.2s;
+}
+
+.otw-modal-image-item:hover {
+    border-color: var(--interactive-accent);
+}
+
+.otw-modal-image-item.otw-modal-image-selected {
+    border-color: var(--interactive-accent);
+    background-color: var(--interactive-accent-hover);
+}
+
+.otw-modal-image-item img {
+    width: 100%;
+    height: 80px;
+    object-fit: cover;
+    display: block;
+}
+
+.otw-modal-empty-msg {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted);
+}
+
+.otw-modal-file-input-container {
+    padding: 10px;
+}
+
+.otw-modal-file-input-container input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    border: 2px dashed var(--background-modifier-border);
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.otw-modal-image-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 150px;
+    padding: 10px;
+}
+
+.otw-modal-image-preview img {
+    max-width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.otw-modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--background-modifier-border);
+}
+
+.otw-modal-buttons button {
+    padding: 8px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.otw-modal-btn-cta {
+    background-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border: none;
+}
+
+.otw-modal-btn-cta:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ===== 发布弹窗 ===== */
+.otw-publish-modal {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+}
+
+.otw-publish-title {
+    margin: 0 0 20px;
+    font-size: 20px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.otw-publish-field {
+    margin-bottom: 18px;
+    width: 100%;
+}
+
+.otw-publish-field-label {
+    display: block;
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+/* 封面图：上下布局，按钮在预览下方 */
+.otw-publish-cover-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.otw-publish-cover-preview {
+    width: 100%;
+    min-height: 140px;
+    border: 2px dashed var(--background-modifier-border);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--background-secondary);
+    padding: 8px;
+    box-sizing: border-box;
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.otw-publish-cover-preview.has-image {
+    border-style: solid;
+}
+
+.otw-publish-cover-preview img.otw-cover-preview-img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 4px;
+}
+
+.otw-publish-select-cover-btn {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-primary);
+    color: var(--text-normal);
+    cursor: pointer;
+    font-size: 13px;
+    white-space: nowrap;
+    align-self: flex-start;
+    transition: all 0.2s;
+}
+
+.otw-publish-select-cover-btn:hover {
+    background: var(--background-modifier-hover);
+}
+
+.otw-publish-divider {
+    border: none;
+    border-top: 1px solid var(--background-modifier-border);
+    margin: 20px 0;
+}
+
+.otw-publish-actions {
+    display: flex;
+    justify-content: center;
+}
+
+.otw-publish-button {
+    padding: 10px 48px;
+    border-radius: 6px;
+    border: none;
+    background-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+
+.otw-publish-button:hover {
+    background-color: var(--interactive-accent-hover);
+    color: var(--text-on-accent);
+}
+
+.otw-publish-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.otw-publish-button.success {
+    background-color: var(--interactive-accent) !important;
+}
+
+/* Modal size overrides */
+.mod-wechat-cover .modal {
+    max-width: 600px;
+}
+
+.mod-publish .modal {
+    max-width: 560px;
+    min-width: 360px;
+    padding: 20px 24px;
+}
+
+.mod-publish .modal .setting-item-control {
+    width: 100%;
+}
+
+/* Fix select text being cut off vertically */
+.mod-publish .modal select.otw-modal-input {
+    line-height: 1.6 !important;
+    min-height: 36px !important;
+    padding: 8px 12px !important;
+}
+

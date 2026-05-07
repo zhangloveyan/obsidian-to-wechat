@@ -1,0 +1,301 @@
+@import url('./view/layout.css');
+@import url('./view/preview.css');
+@import url('./settings/settings.css');
+@import url('./theme-editor.css');
+
+/* ===== 通用弹窗组件 ===== */
+.otw-modal-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    background: var(--background-primary);
+    color: var(--text-normal);
+    font-size: 14px;
+    box-sizing: border-box;
+    line-height: 1.5;
+}
+
+.otw-publish-field select.otw-modal-input {
+    cursor: pointer;
+    line-height: 1.6 !important;
+    min-height: 36px !important;
+    height: auto !important;
+    padding: 10px 12px !important;
+}
+
+.otw-modal-input:focus {
+    outline: none;
+    border-color: var(--interactive-accent);
+    box-shadow: 0 0 0 2px var(--interactive-accent-hover);
+}
+
+/* ===== 封面图选择弹窗 ===== */
+.otw-cover-modal h2 {
+    margin: 0 0 12px;
+}
+
+.otw-modal-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--background-modifier-border);
+    margin-bottom: 15px;
+}
+
+.otw-modal-tab {
+    padding: 10px 20px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.otw-modal-tab:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+.otw-modal-tab.active {
+    border-bottom-color: var(--interactive-accent);
+    color: var(--interactive-accent);
+    font-weight: 600;
+}
+
+.otw-modal-content {
+    min-height: 200px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.otw-modal-content-hidden {
+    display: none !important;
+}
+
+.otw-modal-image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+    padding: 10px;
+}
+
+.otw-modal-image-item {
+    border: 2px solid var(--background-modifier-border);
+    border-radius: 4px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: border-color 0.2s;
+}
+
+.otw-modal-image-item:hover {
+    border-color: var(--interactive-accent);
+}
+
+.otw-modal-image-item.otw-modal-image-selected {
+    border-color: var(--interactive-accent);
+    background-color: var(--interactive-accent-hover);
+}
+
+.otw-modal-image-item img {
+    width: 100%;
+    height: 80px;
+    object-fit: cover;
+    display: block;
+}
+
+.otw-modal-empty-msg {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted);
+}
+
+.otw-modal-file-input-container {
+    padding: 10px;
+}
+
+.otw-modal-file-input-container input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    border: 2px dashed var(--background-modifier-border);
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.otw-modal-image-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 150px;
+    padding: 10px;
+}
+
+.otw-modal-image-preview img {
+    max-width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.otw-modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--background-modifier-border);
+}
+
+.otw-modal-buttons button {
+    padding: 8px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.otw-modal-btn-cta {
+    background-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border: none;
+}
+
+.otw-modal-btn-cta:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ===== 发布弹窗 ===== */
+.otw-publish-modal {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+}
+
+.otw-publish-title {
+    margin: 0 0 20px;
+    font-size: 20px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.otw-publish-field {
+    margin-bottom: 18px;
+    width: 100%;
+}
+
+.otw-publish-field-label {
+    display: block;
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+/* 封面图：上下布局，按钮在预览下方 */
+.otw-publish-cover-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.otw-publish-cover-preview {
+    width: 100%;
+    min-height: 140px;
+    border: 2px dashed var(--background-modifier-border);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--background-secondary);
+    padding: 8px;
+    box-sizing: border-box;
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.otw-publish-cover-preview.has-image {
+    border-style: solid;
+}
+
+.otw-publish-cover-preview img.otw-cover-preview-img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 4px;
+}
+
+.otw-publish-select-cover-btn {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-primary);
+    color: var(--text-normal);
+    cursor: pointer;
+    font-size: 13px;
+    white-space: nowrap;
+    align-self: flex-start;
+    transition: all 0.2s;
+}
+
+.otw-publish-select-cover-btn:hover {
+    background: var(--background-modifier-hover);
+}
+
+.otw-publish-divider {
+    border: none;
+    border-top: 1px solid var(--background-modifier-border);
+    margin: 20px 0;
+}
+
+.otw-publish-actions {
+    display: flex;
+    justify-content: center;
+}
+
+.otw-publish-button {
+    padding: 10px 48px;
+    border-radius: 6px;
+    border: none;
+    background-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+
+.otw-publish-button:hover {
+    background-color: var(--interactive-accent-hover);
+    color: var(--text-on-accent);
+}
+
+.otw-publish-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.otw-publish-button.success {
+    background-color: var(--interactive-accent) !important;
+}
+
+/* Modal size overrides */
+.mod-wechat-cover .modal {
+    max-width: 600px;
+}
+
+.mod-publish .modal {
+    max-width: 560px;
+    min-width: 360px;
+    padding: 20px 24px;
+}
+
+.mod-publish .modal .setting-item-control {
+    width: 100%;
+}
+
+/* Fix select text being cut off vertically */
+.mod-publish .modal select.otw-modal-input {
+    line-height: 1.6 !important;
+    min-height: 36px !important;
+    padding: 8px 12px !important;
+}

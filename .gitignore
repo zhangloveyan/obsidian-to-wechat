@@ -1,0 +1,31 @@
+# Logs
+*.log
+npm-debug.log*
+data.json
+
+# Dependency directories
+node_modules/
+
+# Build output
+main.js.map
+main.js
+*.js.map
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+.vscode/
+.idea/
+.qwen/
+.qoder/
+.claude/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# other
+dist/
+skills/
+docs/

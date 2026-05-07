@@ -1,0 +1,492 @@
+import { App, MarkdownRenderer, Component } from 'obsidian';
+import { cleanObsidianUIElements } from '../transform/html-cleaner';
+import { preprocessMathFormula, waitForAsyncRender, convertMathToSVG as mathToSVG } from '../transform/math-formula';
+import { transformCodeBlocks } from '../transform/code/code-block-transformer';
+import type { ThemeManager } from '../theme/theme-service';
+
+export class ContentTransformer {
+    private static app: App;
+
+    static initialize(app: App) {
+        this.app = app;
+    }
+
+    static formatContent(element: HTMLElement): void {
+        // 创建 section 容器
+        const section = document.createElement('section');
+        section.className = 'otw-content-section';
+        // 移动原有内容到 section 中
+        while (element.firstChild) {
+            section.appendChild(element.firstChild);
+        }
+        element.appendChild(section);
+
+        // 处理元素
+        this.processElements(section);
+    }
+
+    private static processElements(container: HTMLElement | null): void {
+        if (!container) return;
+
+        // 1. 先处理列表（核心逻辑）
+        this.processLists(container);
+
+        // 2. 处理代码块：本地 highlight.js 高亮、Mac 外壳、行号、横向滚动
+        transformCodeBlocks(container);
+
+        // 3. 处理 callout（Obsidian 的提示框）
+        this.processCallouts(container);
+
+        // 4. 处理图片
+        container.querySelectorAll('span.internal-embed[alt][src]').forEach(async el => {
+            const originalSpan = el as HTMLElement;
+            const src = originalSpan.getAttribute('src');
+            const alt = originalSpan.getAttribute('alt');
+
+            if (!src) return;
+
+            try {
+                const linktext = src.split('|')[0];
+                const file = this.app.metadataCache.getFirstLinkpathDest(linktext, '');
+                if (file) {
+                    const absolutePath = this.app.vault.adapter.getResourcePath(file.path);
+                    const newImg = document.createElement('img');
+                    newImg.src = absolutePath;
+                    if (alt) newImg.alt = alt;
+                    originalSpan.parentNode?.replaceChild(newImg, originalSpan);
+                }
+            } catch (error) {
+                console.error('图片处理失败:', error);
+            }
+        });
+    }
+
+    /**
+     * 统一处理所有列表相关逻辑
+     * 将列表转换为 section + p 结构，避免微信自动处理列表元素
+     */
+    private static processLists(container: HTMLElement): void {
+        // 递归处理所有列表（从最内层开始）
+        this.convertListsToSection(container);
+    }
+
+    /**
+     * 将列表元素转换为纯 section 结构
+     * 避免使用 ul/ol/li/p 等会被微信公众号自动处理的标签
+     */
+    private static convertListsToSection(container: HTMLElement): void {
+        // 持续处理，直到没有列表元素
+        while (container.querySelector('ul, ol')) {
+            // 找到所有顶层列表（不在其他列表内的）
+            const topLevelLists = Array.from(container.querySelectorAll('ul, ol')).filter(list => {
+                return !list.closest('ul, ol') || list.closest('ul, ol') === list;
+            });
+
+            for (const list of topLevelLists) {
+                this.convertSingleList(list as HTMLElement);
+            }
+        }
+    }
+
+    /**
+     * 转换单个列表元素为纯 section 结构
+     * 所有标签统一使用 section，不使用 p/ul/ol/li 等会被公众号还原的标签
+     */
+    private static convertSingleList(listElement: HTMLElement): void {
+        const isOrdered = listElement.tagName.toLowerCase() === 'ol';
+        const listItems = Array.from(listElement.querySelectorAll(':scope > li'));
+        
+        // 创建 section 容器
+        const section = document.createElement('section');
+        section.className = 'otw-list-section';
+        section.setAttribute('data-list-type', isOrdered ? 'ordered' : 'unordered');
+        
+        // 计算基础缩进（通过父级列表数量）
+        let indentLevel = 0;
+        let parent = listElement.parentElement;
+        while (parent) {
+            if (parent.classList.contains('otw-list-section')) {
+                indentLevel++;
+            }
+            parent = parent.parentElement;
+        }
+        
+        // 嵌套列表容器清零 margin/padding，顶层列表保留上边距
+        section.style.cssText = indentLevel > 0
+            ? 'margin: 0; padding: 0;'
+            : 'margin: 1em 0 0 0; padding: 0;';
+
+        // 一级列表不缩进，二级及以上才缩进
+        const basePaddingLeft = indentLevel; // em
+
+        let itemNumber = 1;
+        for (const li of listItems) {
+            const liElement = li as HTMLElement;
+            
+            // 检查是否有嵌套列表
+            const nestedList = liElement.querySelector(':scope > ul, :scope > ol');
+            const nestedListClone = nestedList ? nestedList.cloneNode(true) as HTMLElement : null;
+            
+            // 移除嵌套列表，获取纯文本内容
+            if (nestedList) {
+                nestedList.remove();
+            }
+            
+            // 使用 section 而非 p，避免公众号将 p 解析为段落产生多余空行
+            const itemSection = document.createElement('section');
+            itemSection.className = 'otw-list-item';
+            itemSection.style.cssText = `display: block; margin: 0; padding-left: ${basePaddingLeft}em; line-height: 1.8;`;
+            
+            // 添加编号或符号
+            const marker = isOrdered ? `${itemNumber}. ` : '• ';
+            const markerSection = document.createElement('section');
+            markerSection.textContent = marker;
+            markerSection.style.cssText = 'display: inline; margin-right: 0.25em;';
+            itemSection.appendChild(markerSection);
+            
+            // 添加内容
+            const contentSection = document.createElement('section');
+            contentSection.style.cssText = 'display: inline;';
+            contentSection.innerHTML = liElement.innerHTML;
+            
+            // 将内容中的 <p> 标签内联化，避免公众号产生额外空行
+            contentSection.querySelectorAll('p').forEach(pEl => {
+                (pEl as HTMLElement).style.display = 'inline';
+                (pEl as HTMLElement).style.margin = '0';
+                (pEl as HTMLElement).style.padding = '0';
+            });
+            
+            itemSection.appendChild(contentSection);
+            section.appendChild(itemSection);
+            
+            // 如果有嵌套列表，先挂到当前 section 下再递归
+            // 这样递归时向上遍历能找到 .otw-list-section，indentLevel 才能正确计算
+            if (nestedListClone) {
+                section.appendChild(nestedListClone);
+                this.convertSingleList(nestedListClone);
+            }
+            
+            itemNumber++;
+        }
+        
+        // 替换原列表
+        listElement.replaceWith(section);
+    }
+
+    /** Callout 类型到颜色的映射 */
+    private static readonly CALLOUT_COLORS: Record<string, { bg: string; border: string; title: string; icon: string }> = {
+        note:      { bg: '#e8f0fe', border: '#448aff', title: '#448aff', icon: '📝' },
+        info:      { bg: '#e8f0fe', border: '#448aff', title: '#448aff', icon: 'ℹ️' },
+        tip:       { bg: '#e6f7f2', border: '#00bfa5', title: '#00bfa5', icon: '💡' },
+        hint:      { bg: '#e6f7f2', border: '#00bfa5', title: '#00bfa5', icon: '💡' },
+        important: { bg: '#f3e8fd', border: '#7c4dff', title: '#7c4dff', icon: '🔥' },
+        warning:   { bg: '#fff8e1', border: '#ff9100', title: '#ff9100', icon: '⚠️' },
+        caution:   { bg: '#fff8e1', border: '#ff9100', title: '#ff9100', icon: '⚠️' },
+        attention: { bg: '#fff8e1', border: '#ff9100', title: '#ff9100', icon: '⚠️' },
+        danger:    { bg: '#ffeef0', border: '#ff1744', title: '#ff1744', icon: '⛔' },
+        error:     { bg: '#ffeef0', border: '#ff1744', title: '#ff1744', icon: '❌' },
+        bug:       { bg: '#ffeef0', border: '#ff1744', title: '#ff1744', icon: '🐛' },
+        success:   { bg: '#e8f5e9', border: '#00c853', title: '#00c853', icon: '✅' },
+        check:     { bg: '#e8f5e9', border: '#00c853', title: '#00c853', icon: '✅' },
+        done:      { bg: '#e8f5e9', border: '#00c853', title: '#00c853', icon: '✅' },
+        question:  { bg: '#fff8e1', border: '#ff9100', title: '#ff9100', icon: '❓' },
+        help:      { bg: '#fff8e1', border: '#ff9100', title: '#ff9100', icon: '❓' },
+        faq:       { bg: '#fff8e1', border: '#ff9100', title: '#ff9100', icon: '❓' },
+        failure:   { bg: '#ffeef0', border: '#ff1744', title: '#ff1744', icon: '❌' },
+        fail:      { bg: '#ffeef0', border: '#ff1744', title: '#ff1744', icon: '❌' },
+        missing:   { bg: '#ffeef0', border: '#ff1744', title: '#ff1744', icon: '❌' },
+        abstract:  { bg: '#e0f7fa', border: '#00b8d4', title: '#00b8d4', icon: '📋' },
+        summary:   { bg: '#e0f7fa', border: '#00b8d4', title: '#00b8d4', icon: '📋' },
+        tldr:      { bg: '#e0f7fa', border: '#00b8d4', title: '#00b8d4', icon: '📋' },
+        example:   { bg: '#f3e8fd', border: '#7c4dff', title: '#7c4dff', icon: '📖' },
+        todo:      { bg: '#e8f0fe', border: '#448aff', title: '#448aff', icon: '☑️' },
+        quote:     { bg: '#f5f5f5', border: '#9e9e9e', title: '#757575', icon: '💬' },
+        cite:      { bg: '#f5f5f5', border: '#9e9e9e', title: '#757575', icon: '💬' },
+    };
+
+    /** 处理 Obsidian callout 元素，转换为带内联样式的公众号兼容结构 */
+    private static processCallouts(container: HTMLElement): void {
+        container.querySelectorAll('.callout').forEach(calloutEl => {
+            const callout = calloutEl as HTMLElement;
+            const calloutType = (callout.getAttribute('data-callout') || 'note').toLowerCase();
+            const colors = this.CALLOUT_COLORS[calloutType] || this.CALLOUT_COLORS['note'];
+
+            // 获取标题文本
+            const titleInner = callout.querySelector('.callout-title-inner');
+            const titleText = titleInner?.textContent || calloutType.charAt(0).toUpperCase() + calloutType.slice(1);
+
+            // 获取内容
+            const contentEl = callout.querySelector('.callout-content');
+            const contentHTML = contentEl?.innerHTML || '';
+
+            // 构建新的内联样式 HTML 结构
+            const newCallout = document.createElement('section');
+            newCallout.className = `otw-callout otw-callout-${calloutType}`;
+            newCallout.setAttribute('data-callout', calloutType);
+            newCallout.style.cssText = `background: ${colors.bg}; border-left: 4px solid ${colors.border}; border-radius: 6px; padding: 12px 16px; margin: 1em 0; box-sizing: border-box;`;
+
+            // 标题行
+            const titleRow = document.createElement('section');
+            titleRow.className = 'otw-callout-title';
+            titleRow.style.cssText = `display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-weight: bold; color: ${colors.title}; font-size: 1em; line-height: 1.5;`;
+
+            const iconSection = document.createElement('section');
+            iconSection.className = 'otw-callout-icon';
+            iconSection.textContent = colors.icon;
+            iconSection.style.cssText = 'display: inline; font-size: 1.1em;';
+
+            const titleSection = document.createElement('section');
+            titleSection.className = 'otw-callout-title-text';
+            titleSection.textContent = titleText;
+            titleSection.style.cssText = 'display: inline;';
+
+            titleRow.appendChild(iconSection);
+            titleRow.appendChild(titleSection);
+            newCallout.appendChild(titleRow);
+
+            // 内容区域
+            if (contentHTML.trim()) {
+                const contentDiv = document.createElement('section');
+                contentDiv.className = 'otw-callout-content';
+                contentDiv.style.cssText = 'color: #4a4a4a; font-size: 0.95em; line-height: 1.7;';
+                contentDiv.innerHTML = contentHTML;
+
+                // 给内容中的 p 标签添加内联样式
+                contentDiv.querySelectorAll('p').forEach(paragraph => {
+                    paragraph.style.cssText = 'margin: 4px 0; padding: 0; line-height: 1.7;';
+                });
+
+                newCallout.appendChild(contentDiv);
+            }
+
+            // 替换原始 callout 元素
+            // Obsidian 的 callout 通常包裹在 blockquote 中
+            const parentBlockquote = callout.closest('blockquote');
+            if (parentBlockquote && parentBlockquote.parentNode) {
+                parentBlockquote.parentNode.replaceChild(newCallout, parentBlockquote);
+            } else if (callout.parentNode) {
+                callout.parentNode.replaceChild(newCallout, callout);
+            }
+        });
+    }
+}
+
+export async function renderMarkdownContentToElement(
+    app: App,
+    markdown: string,
+    container: HTMLElement,
+    sourcePath: string = '',
+    component: Component = new Component(),
+    convertMermaidToImage: boolean = true,
+): Promise<string> {
+    const processedMarkdown = preprocessMathFormula(markdown);
+
+    await MarkdownRenderer.render(
+        app,
+        processedMarkdown,
+        container,
+        sourcePath,
+        component,
+    );
+
+    await waitForAsyncRender(container, 3000);
+
+    if (convertMermaidToImage) {
+        await convertMermaidSVGToImage(container);
+    }
+
+    cleanObsidianUIElements(container);
+    ContentTransformer.formatContent(container);
+
+    return processedMarkdown;
+}
+
+/**
+ * 将 Markdown 转换为带主题样式的 HTML（用于发布）
+ * 使用 juice 将 CSS 内联到 HTML 元素的 style 属性中
+ */
+export async function markdownToHtml(
+    app: App,
+    markdown: string,
+    sourcePath: string = '',
+    themeManager?: ThemeManager,
+    convertMathToSVG: boolean = false,
+): Promise<string> {
+    const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'fixed';
+    tempDiv.style.left = '-9999px';
+    tempDiv.style.top = '0';
+    tempDiv.style.width = '1000px';
+    document.body.appendChild(tempDiv);
+
+    try {
+        const processedMarkdown = await renderMarkdownContentToElement(
+            app,
+            markdown,
+            tempDiv,
+            sourcePath,
+            new Component(),
+            true,
+        );
+
+        // 移除定位样式
+        tempDiv.removeAttribute('style');
+
+        // 序列化 HTML
+        const serializer = new XMLSerializer();
+        const cleanContainer = document.createElement('div');
+        while (tempDiv.firstChild) {
+            cleanContainer.appendChild(tempDiv.firstChild);
+        }
+
+        let htmlContent = serializer.serializeToString(cleanContainer);
+        htmlContent = htmlContent.replace(/ xmlns="http:\/\/www\.w3\.org\/1999\/xhtml"/g, '');
+
+        // 处理数学公式（使用在线 API 转为图片）
+        if (convertMathToSVG && htmlContent.includes('mjx-')) {
+            try {
+                htmlContent = await mathToSVG(htmlContent, processedMarkdown);
+            } catch (mathError) {
+                console.error('数学公式处理失败:', mathError);
+            }
+        }
+
+        let themeCSS = themeManager ? themeManager.getActiveThemeCSS() : '';
+        if (themeCSS) {
+            themeCSS = themeCSS.replace(
+                /code[^{]*\{[^}]*\}/g,
+                (m: string) => m.replace(/border\s*:\s*[^;]+;?\s*/g, '').replace(/box-shadow\s*:\s*[^;]+;?\s*/g, ''),
+            );
+        }
+
+        // 使用 juice 将 CSS 内联到 HTML
+        if (themeCSS) {
+            try {
+                const { inlineContent } = await import('juice');
+                htmlContent = inlineContent(htmlContent, themeCSS, {
+                    applyStyleTags: true,
+                    removeStyleTags: true,
+                    preserveMediaQueries: false,
+                    preserveFontFaces: false,
+                });
+            } catch (juiceError) {
+                console.error('juice 内联 CSS 失败:', juiceError);
+            }
+        }
+
+        return htmlContent;
+    } finally {
+        if (tempDiv.parentNode) {
+            document.body.removeChild(tempDiv);
+        }
+    }
+}
+
+/**
+ * 将 Mermaid 渲染的 SVG 转为 PNG 图片
+ * 微信公众号对 SVG 支持有限，需要转为 base64 PNG
+ */
+async function convertMermaidSVGToImage(container: HTMLElement): Promise<void> {
+    const mermaidContainers = container.querySelectorAll('.mermaid, pre.mermaid, [class*="mermaid"]');
+    if (mermaidContainers.length === 0) return;
+
+    for (const mermaidEl of Array.from(mermaidContainers)) {
+        const svgElement = mermaidEl.querySelector('svg');
+        if (!svgElement) continue;
+
+        try {
+            const dataUrl = await svgToDataUrl(svgElement);
+            if (!dataUrl) continue;
+
+            const img = document.createElement('img');
+            img.src = dataUrl;
+            img.alt = 'mermaid diagram';
+            img.style.cssText = 'display: block; max-width: 100%; margin: 1em auto; border-radius: 0;';
+
+            mermaidEl.parentNode?.replaceChild(img, mermaidEl);
+        } catch (error) {
+            console.error('[Mermaid] SVG 转图片失败:', error);
+        }
+    }
+}
+
+/**
+ * 将 SVG 元素通过 Canvas 转为 base64 PNG data URL
+ * 优先从 viewBox 获取尺寸，确保甘特图等宽图表正确渲染
+ */
+function svgToDataUrl(svgElement: SVGElement): Promise<string | null> {
+    return new Promise((resolve) => {
+        try {
+            const svgEl = svgElement as SVGSVGElement;
+
+            // 优先从 viewBox 获取尺寸（甘特图等通常只有 viewBox）
+            let width = 0;
+            let height = 0;
+
+            const viewBox = svgEl.getAttribute('viewBox');
+            if (viewBox) {
+                const parts = viewBox.split(/[\s,]+/).map(Number);
+                if (parts.length === 4 && parts[2] > 0 && parts[3] > 0) {
+                    width = parts[2];
+                    height = parts[3];
+                }
+            }
+
+            // 其次从 width/height 属性获取（排除百分比值）
+            if (!width || !height) {
+                const attrWidth = svgEl.getAttribute('width') || '';
+                const attrHeight = svgEl.getAttribute('height') || '';
+                if (attrWidth && !attrWidth.includes('%')) {
+                    width = parseFloat(attrWidth) || width;
+                }
+                if (attrHeight && !attrHeight.includes('%')) {
+                    height = parseFloat(attrHeight) || height;
+                }
+            }
+
+            // 最后兜底
+            if (!width) width = 800;
+            if (!height) height = 600;
+
+            const scale = 2;
+            const canvas = document.createElement('canvas');
+            canvas.width = width * scale;
+            canvas.height = height * scale;
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                resolve(null);
+                return;
+            }
+
+            const clonedSvg = svgEl.cloneNode(true) as SVGSVGElement;
+            clonedSvg.setAttribute('width', String(width));
+            clonedSvg.setAttribute('height', String(height));
+            // 确保 viewBox 存在，保持正确的宽高比
+            if (!clonedSvg.getAttribute('viewBox')) {
+                clonedSvg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            }
+
+            const serializer = new XMLSerializer();
+            const svgString = serializer.serializeToString(clonedSvg);
+            const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(svgBlob);
+
+            const img = new Image();
+            img.onload = () => {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                URL.revokeObjectURL(url);
+                resolve(canvas.toDataURL('image/png'));
+            };
+            img.onerror = () => {
+                URL.revokeObjectURL(url);
+                resolve(null);
+            };
+            img.src = url;
+        } catch {
+            resolve(null);
+        }
+    });
+}

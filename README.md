@@ -2,6 +2,8 @@
 
 Preview, style, copy, and publish Obsidian Markdown notes to WeChat Official Accounts.
 
+[中文文档](README.zh-CN.md)
+
 ## Features
 
 - Live preview for the active Markdown note.
@@ -133,4 +135,3 @@ src/
 ## License
 
 AGPL-3.0
-

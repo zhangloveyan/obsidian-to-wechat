@@ -1,6 +1,6 @@
-# Obsidian to WeChat
+# Markdown WeChat Publisher
 
-Obsidian to WeChat 是一个用于将 Obsidian Markdown 文档预览、排版、复制并发布到微信公众号的插件。
+Markdown WeChat Publisher 是一个用于将 Obsidian Markdown 文档预览、排版、复制并发布到微信公众号的插件。
 
 ## 功能
 
@@ -29,11 +29,11 @@ Obsidian to WeChat 是一个用于将 Obsidian Markdown 文档预览、排版、
 
 3. 将三个文件放入该目录。
 4. 重启 Obsidian。
-5. 在 `设置 > 第三方插件` 中启用 `Obsidian to WeChat`。
+5. 在 `设置 > 第三方插件` 中启用 `Markdown WeChat Publisher`。
 
 ## 微信公众号配置
 
-打开 `设置 > Obsidian to WeChat`，添加一个或多个微信公众号。
+打开 `设置 > Markdown WeChat Publisher`，添加一个或多个微信公众号。
 
 每个账号需要填写：
 
@@ -46,7 +46,7 @@ Obsidian to WeChat 是一个用于将 Obsidian Markdown 文档预览、排版、
 ## 使用方式
 
 1. 打开一篇 Markdown 文档。
-2. 点击侧边栏图标，或执行命令 `Open Obsidian to WeChat`。
+2. 点击侧边栏图标，或执行命令 `Open Markdown WeChat Publisher`。
 3. 选择主题并预览文章效果。
 4. 点击 `Copy to WeChat` 复制排版后的 HTML。
 5. 点击 `Publish` 选择封面图，并创建微信公众号草稿。

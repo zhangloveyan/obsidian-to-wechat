@@ -20,7 +20,7 @@ export default class WechatPublisherPlugin extends Plugin {
 
     async onload() {
         this.logger = createLogger(false);
-        this.logger.info('Loading Obsidian to WeChat plugin');
+        this.logger.info('Loading Markdown WeChat Publisher plugin');
 
         this.settingsManager = new SettingsManager(this);
         await this.settingsManager.loadSettings();
@@ -38,13 +38,13 @@ export default class WechatPublisherPlugin extends Plugin {
             (leaf) => new PreviewView(leaf, this.themeManager, this.settingsManager, this),
         );
 
-        this.addRibbonIcon('pen-tool', '打开 Obsidian to WeChat', () => {
+        this.addRibbonIcon('pen-tool', '打开 Markdown WeChat Publisher', () => {
             this.activateView();
         });
 
         this.addCommand({
             id: 'open-obsidian-to-wechat',
-            name: '打开 Obsidian to WeChat',
+            name: '打开 Markdown WeChat Publisher',
             callback: async () => {
                 await this.activateView();
             },
@@ -52,7 +52,7 @@ export default class WechatPublisherPlugin extends Plugin {
 
         this.addSettingTab(new WechatSettingTab(this.app, this));
 
-        this.logger.info('Obsidian to WeChat plugin loaded');
+        this.logger.info('Markdown WeChat Publisher plugin loaded');
     }
 
     async activateView() {
@@ -83,6 +83,6 @@ export default class WechatPublisherPlugin extends Plugin {
     }
 
     onunload() {
-        this.logger.info('Unloading Obsidian to WeChat plugin');
+        this.logger.info('Unloading Markdown WeChat Publisher plugin');
     }
 }

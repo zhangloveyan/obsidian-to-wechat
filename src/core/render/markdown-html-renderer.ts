@@ -339,7 +339,9 @@ export async function markdownToHtml(
             cleanContainer.appendChild(tempDiv.firstChild);
         }
 
-        let htmlContent = serializer.serializeToString(cleanContainer);
+        let htmlContent = Array.from(cleanContainer.childNodes)
+            .map((node) => serializer.serializeToString(node))
+            .join('');
         htmlContent = htmlContent.replace(/ xmlns="http:\/\/www\.w3\.org\/1999\/xhtml"/g, '');
 
         // 处理数学公式（使用在线 API 转为图片）

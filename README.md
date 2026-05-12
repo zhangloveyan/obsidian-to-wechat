@@ -1,6 +1,6 @@
-# Obsidian to WeChat
+# Markdown WeChat Publisher
 
-Preview, style, copy, and publish Obsidian Markdown notes to WeChat Official Accounts.
+Preview, style, copy, and publish Markdown notes to WeChat Official Accounts.
 
 [中文文档](README.zh-CN.md)
 
@@ -31,11 +31,11 @@ Preview, style, copy, and publish Obsidian Markdown notes to WeChat Official Acc
 
 3. Put the three files into that folder.
 4. Restart Obsidian.
-5. Enable `Obsidian to WeChat` in `Settings > Community plugins`.
+5. Enable `Markdown WeChat Publisher` in `Settings > Community plugins`.
 
 ## WeChat Account Setup
 
-Open `Settings > Obsidian to WeChat` and add one or more WeChat Official Accounts.
+Open `Settings > Markdown WeChat Publisher` and add one or more WeChat Official Accounts.
 
 Each account requires:
 
@@ -48,7 +48,7 @@ You can set a default account and choose a target account when publishing.
 ## Usage
 
 1. Open a Markdown note.
-2. Click the ribbon icon or run the command `Open Obsidian to WeChat`.
+2. Click the ribbon icon or run the command `Open Markdown WeChat Publisher`.
 3. Select a theme and preview the rendered article.
 4. Click `Copy to WeChat` to copy the rendered HTML.
 5. Click `Publish` to select a cover image and create a WeChat draft.

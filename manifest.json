@@ -1,9 +1,9 @@
 {
 	"id": "wechat-publisher",
-	"name": "Obsidian to WeChat",
-	"version": "0.1.0",
+	"name": "Markdown WeChat Publisher",
+	"version": "0.1.1",
 	"minAppVersion": "0.15.0",
-	"description": "Preview, style, and publish Obsidian Markdown notes to multiple WeChat Official Accounts.",
+	"description": "Preview, style, and publish Markdown notes to multiple WeChat Official Accounts.",
 	"author": "Ancle",
 	"isDesktopOnly": false
 }

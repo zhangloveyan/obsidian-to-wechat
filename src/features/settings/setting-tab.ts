@@ -17,7 +17,7 @@ export class WechatSettingTab extends PluginSettingTab {
         containerEl.empty();
         containerEl.addClass('otw-settings');
 
-        containerEl.createEl('h2', { text: 'Obsidian to WeChat 设置' });
+        containerEl.createEl('h2', { text: 'Markdown WeChat Publisher 设置' });
 
         new Setting(containerEl)
             .setName('主题编辑器')

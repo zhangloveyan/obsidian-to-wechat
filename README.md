@@ -26,7 +26,7 @@ Preview, style, copy, and publish Markdown notes to WeChat Official Accounts.
 2. Create this folder in your vault:
 
    ```text
-   .obsidian/plugins/wechat-publisher
+   .obsidian/plugins/markdown-wechat-publisher
    ```
 
 3. Put the three files into that folder.

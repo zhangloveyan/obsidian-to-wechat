@@ -145,7 +145,8 @@ export class PublishModal extends Modal {
                 }
             } catch (error: unknown) {
                 console.error('发布失败:', error);
-                new Notice('发布失败：' + ((error as Error).message || '未知错误'));
+                const message = error instanceof Error ? error.message : String(error || '未知错误');
+                new Notice(`发布失败：${message}`, 12000);
                 publishButton.disabled = false;
                 publishButton.textContent = '发布到草稿箱';
             }

@@ -164,9 +164,13 @@ export class WechatApiClient {
             case 48001:
                 return '接口功能未授权。';
             case 40009:
-                return '图片尺寸太大，请压缩后重试。';
+                return `图片尺寸太大或格式不符合要求，请压缩/转换后重试。微信返回：${errmsg}`;
             case 41005:
-                return '缺少多媒体文件数据。';
+                return `缺少多媒体文件数据，请检查图片文件是否读取成功。微信返回：${errmsg}`;
+            case 40004:
+                return `无效的媒体文件类型，请检查图片格式。微信返回：${errmsg}`;
+            case 45001:
+                return `多媒体文件大小超过限制，请压缩图片后重试。微信返回：${errmsg}`;
             case 40164: {
                 const ipMatch = errmsg?.match(/\d+\.\d+\.\d+\.\d+/);
                 const ip = ipMatch ? ipMatch[0] : '当前IP';

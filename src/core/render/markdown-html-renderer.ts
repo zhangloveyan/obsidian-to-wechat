@@ -3,6 +3,11 @@ import { cleanObsidianUIElements } from '../transform/html-cleaner';
 import { preprocessMathFormula, waitForAsyncRender, convertMathToSVG as mathToSVG } from '../transform/math-formula';
 import { transformCodeBlocks } from '../transform/code/code-block-transformer';
 import type { ThemeManager } from '../theme/theme-service';
+import {
+    isRemoteOrDataImage,
+    normalizeMarkdownImageDestinations,
+    resolveImageFile,
+} from '../../integrations/wechat/image-path-resolver';
 
 export class ContentTransformer {
     private static app: App;
@@ -11,7 +16,7 @@ export class ContentTransformer {
         this.app = app;
     }
 
-    static formatContent(element: HTMLElement): void {
+    static formatContent(element: HTMLElement, sourcePath: string = ''): void {
         // 创建 section 容器
         const section = document.createElement('section');
         section.className = 'otw-content-section';
@@ -22,10 +27,10 @@ export class ContentTransformer {
         element.appendChild(section);
 
         // 处理元素
-        this.processElements(section);
+        this.processElements(section, sourcePath);
     }
 
-    private static processElements(container: HTMLElement | null): void {
+    private static processElements(container: HTMLElement | null, sourcePath: string): void {
         if (!container) return;
 
         // 1. 先处理列表（核心逻辑）
@@ -38,27 +43,45 @@ export class ContentTransformer {
         this.processCallouts(container);
 
         // 4. 处理图片
-        container.querySelectorAll('span.internal-embed[alt][src]').forEach(async el => {
+        this.processImages(container, sourcePath);
+    }
+
+    private static processImages(container: HTMLElement, sourcePath: string): void {
+        container.querySelectorAll('span.internal-embed[alt][src]').forEach(el => {
             const originalSpan = el as HTMLElement;
             const src = originalSpan.getAttribute('src');
-            const alt = originalSpan.getAttribute('alt');
-
             if (!src) return;
 
-            try {
-                const linktext = src.split('|')[0];
-                const file = this.app.metadataCache.getFirstLinkpathDest(linktext, '');
-                if (file) {
-                    const absolutePath = this.app.vault.adapter.getResourcePath(file.path);
-                    const newImg = document.createElement('img');
-                    newImg.src = absolutePath;
-                    if (alt) newImg.alt = alt;
-                    originalSpan.parentNode?.replaceChild(newImg, originalSpan);
-                }
-            } catch (error) {
-                console.error('图片处理失败:', error);
-            }
+            const linktext = src.split('|')[0];
+            const resourcePath = this.resolveLocalImageResource(linktext, sourcePath);
+            if (!resourcePath) return;
+
+            const newImg = document.createElement('img');
+            newImg.src = resourcePath;
+            const alt = originalSpan.getAttribute('alt');
+            if (alt) newImg.alt = alt;
+            originalSpan.parentNode?.replaceChild(newImg, originalSpan);
         });
+
+        container.querySelectorAll('img[src]').forEach(el => {
+            const img = el as HTMLImageElement;
+            const src = img.getAttribute('src');
+            if (!src || isRemoteOrDataImage(src) || src.startsWith('app://')) return;
+
+            const resourcePath = this.resolveLocalImageResource(src, sourcePath);
+            if (resourcePath) img.src = resourcePath;
+        });
+    }
+
+    private static resolveLocalImageResource(src: string, sourcePath: string): string | null {
+        try {
+            const result = resolveImageFile(this.app, src, sourcePath);
+            if (!result.file) return null;
+            return this.app.vault.adapter.getResourcePath(result.file.path);
+        } catch (error) {
+            console.error('图片路径解析失败:', error);
+            return null;
+        }
     }
 
     /**
@@ -279,7 +302,8 @@ export async function renderMarkdownContentToElement(
     component: Component = new Component(),
     convertMermaidToImage: boolean = true,
 ): Promise<string> {
-    const processedMarkdown = preprocessMathFormula(markdown);
+    const normalizedMarkdown = normalizeMarkdownImageDestinations(markdown);
+    const processedMarkdown = preprocessMathFormula(normalizedMarkdown);
 
     await MarkdownRenderer.render(
         app,
@@ -296,7 +320,7 @@ export async function renderMarkdownContentToElement(
     }
 
     cleanObsidianUIElements(container);
-    ContentTransformer.formatContent(container);
+    ContentTransformer.formatContent(container, sourcePath);
 
     return processedMarkdown;
 }

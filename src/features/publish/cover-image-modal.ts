@@ -1,5 +1,6 @@
 import { App, Modal, Notice, MarkdownView, TFile } from 'obsidian';
 import type WechatPublisherPlugin from '../../plugin';
+import { extractImagePathsFromMarkdown, isRemoteOrDataImage, normalizeImagePath, resolveImageFile } from '../../integrations/wechat/image-path-resolver';
 
 interface ArticleImage {
     rawPath: string;
@@ -178,7 +179,7 @@ export class CoverImageModal extends Modal {
                     }
                     const mediaId = await this.plugin.wechatPublisher.uploadImageToWechat(this.localFileData, this.localFileName);
                     if (!mediaId) {
-                        new Notice('上传封面图失败，请重试');
+                        new Notice(`上传封面图失败：${this.localFileName}`);
                         confirmButton.disabled = false;
                         confirmButton.textContent = '确认';
                         return;
@@ -192,7 +193,7 @@ export class CoverImageModal extends Modal {
                     const arrayBuffer = await this.app.vault.readBinary(this.selectedArticleImage);
                     const mediaId = await this.plugin.wechatPublisher.uploadImageToWechat(arrayBuffer, this.selectedArticleImage.name);
                     if (!mediaId) {
-                        new Notice('上传封面图失败');
+                        new Notice(`上传封面图失败：${this.selectedArticleImage.path}`);
                         confirmButton.disabled = false;
                         confirmButton.textContent = '确认';
                         return;
@@ -233,55 +234,25 @@ export class CoverImageModal extends Modal {
 
     private async resolveArticleImages(): Promise<ArticleImage[]> {
         const result: ArticleImage[] = [];
-        const rawPaths = this.extractImagePaths();
+        const rawPaths = extractImagePathsFromMarkdown(this.markdownView.getViewData());
         const sourceFile = this.markdownView.file;
 
         for (const rawPath of rawPaths) {
-            if (rawPath.startsWith('data:') || rawPath.startsWith('http')) {
-                result.push({ rawPath, displayUrl: rawPath, file: null as unknown as TFile });
+            if (isRemoteOrDataImage(rawPath)) {
                 continue;
             }
 
             if (sourceFile) {
-                const linkedFile = this.app.metadataCache.getFirstLinkpathDest(rawPath, sourceFile.path);
-                if (linkedFile) {
-                    const resourcePath = this.app.vault.getResourcePath(linkedFile);
-                    result.push({ rawPath, displayUrl: resourcePath, file: linkedFile });
-                    continue;
-                }
-            }
-
-            // Try without prefix
-            if (sourceFile) {
-                const linkedFile = this.app.metadataCache.getFirstLinkpathDest(rawPath.replace(/^\.?\//, ''), sourceFile.path);
-                if (linkedFile) {
-                    const resourcePath = this.app.vault.getResourcePath(linkedFile);
-                    result.push({ rawPath, displayUrl: resourcePath, file: linkedFile });
+                const resolved = resolveImageFile(this.app, normalizeImagePath(rawPath), sourceFile.path);
+                if (resolved.file) {
+                    const resourcePath = this.app.vault.getResourcePath(resolved.file);
+                    result.push({ rawPath, displayUrl: resourcePath, file: resolved.file });
                     continue;
                 }
             }
         }
 
         return result.filter(img => img.file !== null);
-    }
-
-    private extractImagePaths(): string[] {
-        const paths: string[] = [];
-        const editorContent = this.markdownView.getViewData();
-
-        const mdImageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
-        let match;
-        while ((match = mdImageRegex.exec(editorContent)) !== null) {
-            const path = match[2].split(/\s/)[0];
-            if (!paths.includes(path)) paths.push(path);
-        }
-
-        const htmlImgRegex = /<img[^>]+src=["']([^"']+)["']/gi;
-        while ((match = htmlImgRegex.exec(editorContent)) !== null) {
-            if (!paths.includes(match[1])) paths.push(match[1]);
-        }
-
-        return paths;
     }
 
     onClose() {

@@ -1,4 +1,4 @@
-import { Notice, TFile } from 'obsidian';
+import { Notice, TFile, requestUrl } from 'obsidian';
 import type WechatPublisherPlugin from '../../plugin';
 import { WechatApiClient } from './wechat-api-client';
 import { WechatImageUploader } from './wechat-uploader';
@@ -6,7 +6,7 @@ import { WechatDraftPublisher } from './wechat-draft';
 import type { Logger } from '../../shared/logger';
 import type { SettingsManager } from '../../features/settings/settings';
 import { getOrCreateMetadata, isImageUploaded, addImageMetadata, updateMetadata } from '../../types/metadata';
-import { requestUrl } from 'obsidian';
+import { isRemoteOrDataImage, normalizeImagePath, resolveImageFile } from './image-path-resolver';
 
 /**
  * Facade that coordinates WechatApiClient, WechatImageUploader, and WechatDraftPublisher.
@@ -59,7 +59,11 @@ export class WechatPublisher {
     async uploadImageToWechat(imageData: ArrayBuffer, fileName: string): Promise<string> {
         if (!this.ensureReady()) return '';
         const result = await this.uploader!.upload(imageData, fileName);
-        return result?.media_id || '';
+        if (!result.ok) {
+            new Notice(`上传图片失败：${fileName}\n${result.message}`, 10000);
+            return '';
+        }
+        return result.media_id;
     }
 
     /** Get materials from WeChat library */
@@ -81,6 +85,7 @@ export class WechatPublisher {
 
         const images = tempDiv.querySelectorAll('img');
         const totalImages = images.length;
+        const failures: string[] = [];
 
         let processedCount = 0;
         for (const img of Array.from(images)) {
@@ -88,15 +93,26 @@ export class WechatPublisher {
             if (!src) continue;
 
             if (onProgress) {
-                const fileName = src.split('/').pop() || `图片 ${processedCount + 1}`;
+                const fileName = normalizeImagePath(src).split('/').pop() || `图片 ${processedCount + 1}`;
                 onProgress(processedCount, totalImages, fileName);
             }
 
-            const imageUrl = await this.processImage(src, file, metadata);
-            if (imageUrl) {
-                img.setAttribute('src', imageUrl);
+            const result = await this.processImage(src, file, metadata);
+            if (result.url) {
+                img.setAttribute('src', result.url);
                 processedCount++;
+            } else {
+                failures.push(result.message);
             }
+        }
+
+        if (failures.length > 0) {
+            const message = [
+                `正文图片上传失败，共 ${failures.length} 张：`,
+                ...failures.map((failure, index) => `${index + 1}. ${failure}`),
+            ].join('\n');
+            new Notice(message, 12000);
+            throw new Error(message);
         }
 
         this.processLists(tempDiv);
@@ -111,7 +127,6 @@ export class WechatPublisher {
         file: TFile,
     ): Promise<boolean> {
         if (!this.ensureReady()) return false;
-        // Process document images
         const processedContent = await this.processDocumentImages(content, file);
 
         return this.draftPublisher!.publish({
@@ -127,16 +142,29 @@ export class WechatPublisher {
         imagePath: string,
         file: TFile,
         metadata: any,
-    ): Promise<string | null> {
-        // 1. Base64 data URL
+    ): Promise<{ url: string | null; message: string }> {
+        const normalizedPath = normalizeImagePath(imagePath);
+
         if (imagePath.startsWith('data:image/')) {
-            const match = imagePath.match(/^data:image\/(\w+);base64,(.+)$/);
-            if (!match) return null;
+            return this.processBase64Image(imagePath);
+        }
 
-            const ext = match[1];
-            const base64Data = match[2];
-            const fileName = `formula_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
+        if (isRemoteOrDataImage(imagePath) || /^https?:\/\//i.test(normalizedPath)) {
+            return this.processRemoteImage(imagePath, normalizedPath, file, metadata);
+        }
 
+        return this.processLocalImage(imagePath, normalizedPath, file, metadata);
+    }
+
+    private async processBase64Image(imagePath: string): Promise<{ url: string | null; message: string }> {
+        const match = imagePath.match(/^data:image\/(\w+);base64,(.+)$/);
+        if (!match) return { url: null, message: `Base64 图片格式无法识别：${shortenImagePath(imagePath)}` };
+
+        const ext = match[1];
+        const base64Data = match[2];
+        const fileName = `formula_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
+
+        try {
             const binaryString = window.atob(base64Data);
             const bytes = new Uint8Array(binaryString.length);
             for (let i = 0; i < binaryString.length; i++) {
@@ -144,62 +172,96 @@ export class WechatPublisher {
             }
 
             const uploadResult = await this.uploader!.upload(bytes.buffer, fileName);
-            return uploadResult?.url || null;
-        }
-
-        // 2. HTTP/HTTPS image
-        if (imagePath.startsWith('http')) {
-            let imageMetadata = isImageUploaded(metadata, imagePath);
-            if (!imageMetadata) {
-                try {
-                    const response = await requestUrl({ url: imagePath });
-                    if (response.status !== 200) return null;
-
-                    const fileName = imagePath.split('/').pop()?.split('?')[0] || `web_image_${Date.now()}.png`;
-                    const uploadResult = await this.uploader!.upload(response.arrayBuffer, fileName);
-                    if (!uploadResult) return null;
-
-                    imageMetadata = {
-                        fileName: imagePath,
-                        url: uploadResult.url,
-                        media_id: uploadResult.media_id,
-                        uploadTime: Date.now(),
-                    };
-                    addImageMetadata(metadata, imagePath, imageMetadata);
-                    await updateMetadata(this.settingsManager, file, metadata);
-                } catch (e) {
-                    this.logger.error(`Failed to download network image: ${imagePath}`, e);
-                    return null;
-                }
+            if (!uploadResult.ok) {
+                return { url: null, message: `${fileName}：${uploadResult.message}` };
             }
-            return imageMetadata.url;
+            return { url: uploadResult.url, message: '' };
+        } catch (error) {
+            return { url: null, message: `${fileName}：Base64 图片处理失败，${formatError(error)}` };
         }
+    }
 
-        // 3. Local file path
-        let fileName = imagePath.replace(/\\/g, '/').split('/').pop();
-        if (!fileName) return null;
-        if (fileName.includes('?')) fileName = fileName.split('?')[0];
-
-        let imageMetadata = isImageUploaded(metadata, fileName);
+    private async processRemoteImage(
+        imagePath: string,
+        normalizedPath: string,
+        file: TFile,
+        metadata: any,
+    ): Promise<{ url: string | null; message: string }> {
+        let imageMetadata = isImageUploaded(metadata, imagePath);
         if (!imageMetadata) {
-            const linkedFile = this.settingsManager.plugin.app.metadataCache.getFirstLinkpathDest(fileName, file.path);
-            if (!linkedFile || !(linkedFile instanceof TFile)) return null;
+            try {
+                const response = await requestUrl({ url: imagePath });
+                if (response.status !== 200) {
+                    return { url: null, message: `网络图片下载失败：${imagePath}，HTTP ${response.status}` };
+                }
 
-            const arrayBuffer = await this.settingsManager.plugin.app.vault.readBinary(linkedFile);
-            const uploadResult = await this.uploader!.upload(arrayBuffer, fileName);
-            if (!uploadResult) return null;
+                const fileName = normalizedPath.split('/').pop() || `web_image_${Date.now()}.png`;
+                const uploadResult = await this.uploader!.upload(response.arrayBuffer, fileName);
+                if (!uploadResult.ok) {
+                    return { url: null, message: `网络图片上传失败：${imagePath}，${uploadResult.message}` };
+                }
 
-            imageMetadata = {
-                fileName,
-                url: uploadResult.url,
-                media_id: uploadResult.media_id,
-                uploadTime: Date.now(),
-            };
-            addImageMetadata(metadata, fileName, imageMetadata);
-            await updateMetadata(this.settingsManager, file, metadata);
+                imageMetadata = {
+                    fileName: imagePath,
+                    url: uploadResult.url,
+                    media_id: uploadResult.media_id,
+                    uploadTime: Date.now(),
+                };
+                addImageMetadata(metadata, imagePath, imageMetadata);
+                await updateMetadata(this.settingsManager, file, metadata);
+            } catch (error) {
+                this.logger.error(`Failed to download network image: ${imagePath}`, error);
+                return { url: null, message: `网络图片处理失败：${imagePath}，${formatError(error)}` };
+            }
         }
 
-        return imageMetadata.url;
+        return { url: imageMetadata.url, message: '' };
+    }
+
+    private async processLocalImage(
+        imagePath: string,
+        normalizedPath: string,
+        file: TFile,
+        metadata: any,
+    ): Promise<{ url: string | null; message: string }> {
+        const resolved = resolveImageFile(this.settingsManager.plugin.app, normalizedPath, file.path);
+        if (!resolved.file) {
+            return {
+                url: null,
+                message: `本地图片路径解析失败：${imagePath}。已尝试：${resolved.attempts.join(' | ')}`,
+            };
+        }
+
+        const metadataKey = resolved.file.path;
+        let imageMetadata = isImageUploaded(metadata, metadataKey);
+        if (!imageMetadata) {
+            try {
+                const arrayBuffer = await this.settingsManager.plugin.app.vault.readBinary(resolved.file);
+                const uploadResult = await this.uploader!.upload(arrayBuffer, resolved.file.name);
+                if (!uploadResult.ok) {
+                    return {
+                        url: null,
+                        message: `本地图片上传失败：${resolved.file.path}，${uploadResult.message}`,
+                    };
+                }
+
+                imageMetadata = {
+                    fileName: metadataKey,
+                    url: uploadResult.url,
+                    media_id: uploadResult.media_id,
+                    uploadTime: Date.now(),
+                };
+                addImageMetadata(metadata, metadataKey, imageMetadata);
+                await updateMetadata(this.settingsManager, file, metadata);
+            } catch (error) {
+                return {
+                    url: null,
+                    message: `本地图片读取失败：${resolved.file.path}，${formatError(error)}`,
+                };
+            }
+        }
+
+        return { url: imageMetadata.url, message: '' };
     }
 
     /** Process lists (delegated to shared utility) */
@@ -211,4 +273,12 @@ export class WechatPublisher {
             }
         });
     }
+}
+
+function formatError(error: unknown): string {
+    return error instanceof Error ? error.message : String(error);
+}
+
+function shortenImagePath(path: string): string {
+    return path.length > 80 ? `${path.slice(0, 77)}...` : path;
 }

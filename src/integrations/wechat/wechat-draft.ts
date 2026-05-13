@@ -48,17 +48,22 @@ export class WechatDraftPublisher {
             });
         });
 
-        if (!response) return false;
+        if (!response) {
+            new Notice('创建微信公众号草稿失败：微信接口无响应，请检查网络、IP 白名单和公众号配置。');
+            return false;
+        }
 
         if (response.status !== 200) {
             if (response.json?.errcode && response.json.errcode !== 0) {
-                new Notice(this.apiClient.getErrorMessage(response.json));
+                new Notice(`创建微信公众号草稿失败：${this.apiClient.getErrorMessage(response.json)}`);
+            } else {
+                new Notice(`创建微信公众号草稿失败：HTTP ${response.status}`);
             }
             return false;
         }
 
         if (response.json?.errcode && response.json.errcode !== 0) {
-            new Notice(this.apiClient.getErrorMessage(response.json));
+            new Notice(`创建微信公众号草稿失败：${this.apiClient.getErrorMessage(response.json)}`);
             return false;
         }
 
@@ -84,10 +89,13 @@ export class WechatDraftPublisher {
             });
         });
 
-        if (!response) return { items: [], totalCount: 0 };
+        if (!response) {
+            new Notice('获取微信素材列表失败：微信接口无响应，请检查网络、IP 白名单和公众号配置。');
+            return { items: [], totalCount: 0 };
+        }
 
         if (response.json.errcode && response.json.errcode !== 0) {
-            new Notice(this.apiClient.getErrorMessage(response.json));
+            new Notice(`获取微信素材列表失败：${this.apiClient.getErrorMessage(response.json)}`);
             return { items: [], totalCount: 0 };
         }
 

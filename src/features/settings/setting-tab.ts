@@ -17,7 +17,9 @@ export class WechatSettingTab extends PluginSettingTab {
         containerEl.empty();
         containerEl.addClass('otw-settings');
 
-        containerEl.createEl('h2', { text: 'Markdown WeChat Publisher 设置' });
+        new Setting(containerEl)
+            .setName('插件设置')
+            .setHeading();
 
         new Setting(containerEl)
             .setName('主题编辑器')
@@ -30,7 +32,9 @@ export class WechatSettingTab extends PluginSettingTab {
                     modal.open();
                 }));
 
-        containerEl.createEl('h3', { text: '微信公众号配置' });
+        new Setting(containerEl)
+            .setName('微信公众号配置')
+            .setHeading();
         this.renderAccountList(containerEl);
     }
 
@@ -56,9 +60,11 @@ export class WechatSettingTab extends PluginSettingTab {
             if (!isDefault) {
                 settingEl.addButton(btn => btn
                     .setButtonText('设为默认')
-                    .onClick(async () => {
+                    .onClick(() => {
+                        void (async () => {
                         await this.plugin.settingsManager.setDefaultAccount(account.id);
                         this.display();
+                        })();
                     }));
             }
 
@@ -68,7 +74,8 @@ export class WechatSettingTab extends PluginSettingTab {
                     .onClick(() => this.openAccountModal(account)))
                 .addButton(btn => btn
                     .setButtonText('测试')
-                    .onClick(async () => {
+                    .onClick(() => {
+                        void (async () => {
                         btn.setButtonText('测试中…').setDisabled(true);
                         try {
                             const result = await this.plugin.wechatPublisher.testConnection(account.appId, account.appSecret);
@@ -78,14 +85,17 @@ export class WechatSettingTab extends PluginSettingTab {
                                 new Notice(`${account.name}：${result.message}`);
                             }
                         } catch (error: unknown) {
-                            new Notice(`${account.name}：测试异常 — ${(error as Error).message || '未知错误'}`);
+                            const message = error instanceof Error ? error.message : String(error || '未知错误');
+                            new Notice(`${account.name}：测试异常 — ${message}`);
                         } finally {
                             btn.setButtonText('测试').setDisabled(false);
                         }
+                        })();
                     }))
                 .addButton(btn => btn
                     .setButtonText('删除')
-                    .onClick(async () => {
+                    .onClick(() => {
+                        void (async () => {
                         if (accounts.length === 1) {
                             new Notice('至少保留一个公众号配置');
                             return;
@@ -94,6 +104,7 @@ export class WechatSettingTab extends PluginSettingTab {
                         await this.plugin.settingsManager.deleteAccount(account.id);
                         new Notice(`已删除公众号「${name}」`);
                         this.display();
+                        })();
                     }));
         }
     }

@@ -26,7 +26,7 @@ export default class WechatPublisherPlugin extends Plugin {
         await this.settingsManager.loadSettings();
 
         this.themeManager = new ThemeManager(this);
-        await this.themeManager.initialize();
+        this.themeManager.initialize();
 
         ContentTransformer.initialize(this.app);
 
@@ -38,15 +38,15 @@ export default class WechatPublisherPlugin extends Plugin {
             (leaf) => new PreviewView(leaf, this.themeManager, this.settingsManager, this),
         );
 
-        this.addRibbonIcon('pen-tool', '打开 Markdown WeChat Publisher', () => {
-            this.activateView();
+        this.addRibbonIcon('pen-tool', '打开预览', () => {
+            void this.activateView();
         });
 
         this.addCommand({
             id: 'open-obsidian-to-wechat',
-            name: '打开 Markdown WeChat Publisher',
-            callback: async () => {
-                await this.activateView();
+            name: '打开预览',
+            callback: () => {
+                void this.activateView();
             },
         });
 
@@ -58,7 +58,7 @@ export default class WechatPublisherPlugin extends Plugin {
     async activateView() {
         const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_PREVIEW);
         if (leaves.length > 0) {
-            this.app.workspace.revealLeaf(leaves[0]);
+            await this.app.workspace.revealLeaf(leaves[0]);
             return;
         }
 

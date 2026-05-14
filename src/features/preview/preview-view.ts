@@ -49,19 +49,23 @@ export class PreviewView extends ItemView {
 
         this.refreshButton = controlsGroup.createEl('button', { cls: 'otw-refresh-button', attr: { 'aria-label': '刷新预览' } });
         setIcon(this.refreshButton, 'rotate-cw');
-        this.refreshButton.addEventListener('click', () => this.forceRefreshPreview());
+        this.refreshButton.addEventListener('click', () => {
+            void this.forceRefreshPreview();
+        });
 
         const themeOptions = this.getThemeOptions();
         this.customThemeSelect = this.createCustomSelect(controlsGroup, themeOptions);
         this.customThemeSelect.id = 'template-select';
 
-        this.customThemeSelect.querySelector('.custom-select')?.addEventListener('change', async (e: Event) => {
+        this.customThemeSelect.querySelector('.custom-select')?.addEventListener('change', (e: Event) => {
+            void (async () => {
             const value = (e as CustomEvent).detail?.value || (this.customThemeSelect.querySelector('.custom-select') as HTMLElement)?.dataset.value;
             if (value) {
                 this.themeManager.setActiveTheme(value);
                 await this.settingsManager.updateSettings({ activeThemeId: value });
                 this.applyCurrentTheme();
             }
+            })();
         });
 
         const settings = this.settingsManager.getSettings();
@@ -73,7 +77,8 @@ export class PreviewView extends ItemView {
 
         this.previewEl = container.createEl('div', { cls: 'otw-preview-area' });
 
-        this.copyButton.addEventListener('click', async () => {
+        this.copyButton.addEventListener('click', () => {
+            void (async () => {
             if (!this.currentFile) return;
             this.copyButton.disabled = true;
             this.copyButton.setText('复制中...');
@@ -91,13 +96,15 @@ export class PreviewView extends ItemView {
 
                 this.copyButton.setText('复制成功');
                 setTimeout(() => { this.copyButton.disabled = false; this.copyButton.setText('复制到公众号'); }, 2000);
-            } catch (error) {
+            } catch {
                 this.copyButton.setText('复制失败');
                 setTimeout(() => { this.copyButton.disabled = false; this.copyButton.setText('复制到公众号'); }, 2000);
             }
+            })();
         });
 
-        publishButton.addEventListener('click', async () => {
+        publishButton.addEventListener('click', () => {
+            void (async () => {
             if (!this.currentFile) return;
 
             const leaves = this.app.workspace.getLeavesOfType('markdown');
@@ -122,9 +129,12 @@ export class PreviewView extends ItemView {
             if (markdownView) {
                 showPublishModal.call(this.plugin, markdownView);
             }
+            })();
         });
 
-        this.registerEvent(this.app.workspace.on('file-open', this.onFileOpen.bind(this)));
+        this.registerEvent(this.app.workspace.on('file-open', (file) => {
+            void this.onFileOpen(file);
+        }));
         this.registerEvent(this.app.vault.on('modify', this.onFileModify.bind(this)));
 
         const currentFile = this.app.workspace.getActiveFile();
@@ -137,7 +147,7 @@ export class PreviewView extends ItemView {
     }
 
     private async syncThemeFromSettings(): Promise<void> {
-        await this.themeManager.reloadThemes();
+        this.themeManager.reloadThemes();
 
         const settings = this.settingsManager.getSettings();
         const currentActiveId = settings.activeThemeId || 'default';
@@ -213,7 +223,6 @@ export class PreviewView extends ItemView {
         const themeSelect = this.customThemeSelect.querySelector('.custom-select');
         if (themeSelect) {
             themeSelect.classList.toggle('disabled', !enabled);
-            themeSelect.setAttribute('style', `pointer-events: ${enabled ? 'auto' : 'none'}`);
         }
         this.copyButton.disabled = !enabled;
     }
@@ -245,10 +254,10 @@ export class PreviewView extends ItemView {
         }
     }
 
-    async onFileModify(file: TFile) {
+    onFileModify(file: TFile): void {
         if (file === this.currentFile) {
             if (this.updateTimer) clearTimeout(this.updateTimer);
-            this.updateTimer = setTimeout(() => { this.updatePreview(); }, 500);
+            this.updateTimer = setTimeout(() => { void this.updatePreview(); }, 500);
         }
     }
 

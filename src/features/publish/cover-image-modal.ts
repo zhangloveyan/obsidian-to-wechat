@@ -51,7 +51,7 @@ export class CoverImageModal extends Modal {
         let updateConfirmState = () => {};
 
         // Resolve article images
-        const articleImages = await this.resolveArticleImages();
+        const articleImages = this.resolveArticleImages();
 
         const imageGrid = articleContent.createDiv({ cls: 'otw-modal-image-grid' });
         const emptyMsg = articleContent.createDiv({ cls: 'otw-modal-empty-msg', text: '文章中暂无图片，请从本地选择' });
@@ -65,7 +65,8 @@ export class CoverImageModal extends Modal {
                 const capturedImgInfo = imgInfo;
                 const capturedItem = item;
                 img.onerror = () => { capturedItem.remove(); };
-                item.addEventListener('click', async () => {
+                item.addEventListener('click', () => {
+                    void (async () => {
                     imageGrid.querySelectorAll('.otw-modal-image-item').forEach((el: HTMLElement) => el.classList.remove('otw-modal-image-selected'));
                     capturedItem.classList.add('otw-modal-image-selected');
                     this.selectedMediaId = 'article_' + Date.now();
@@ -74,6 +75,7 @@ export class CoverImageModal extends Modal {
                     this.selectedDisplayUrl = await this.fileToDataUrl(capturedImgInfo.file);
                     this.localFileData = null;
                     updateConfirmState();
+                    })();
                 });
             }
         }
@@ -160,7 +162,8 @@ export class CoverImageModal extends Modal {
         articleTab.addEventListener('click', updateConfirmState);
         localTab.addEventListener('click', updateConfirmState);
 
-        confirmButton.addEventListener('click', async () => {
+        confirmButton.addEventListener('click', () => {
+            void (async () => {
             if (!this.selectedMediaId) { new Notice('请先选择图片'); return; }
             confirmButton.disabled = true;
             confirmButton.textContent = '上传中...';
@@ -206,10 +209,12 @@ export class CoverImageModal extends Modal {
                     confirmButton.textContent = '确认';
                 }
             } catch (error: unknown) {
-                new Notice('上传失败：' + ((error as Error).message || '未知错误'));
+                const message = error instanceof Error ? error.message : String(error || '未知错误');
+                new Notice('上传失败：' + message);
                 confirmButton.disabled = false;
                 confirmButton.textContent = '确认';
             }
+            })();
         });
     }
 
@@ -232,7 +237,7 @@ export class CoverImageModal extends Modal {
         }
     }
 
-    private async resolveArticleImages(): Promise<ArticleImage[]> {
+    private resolveArticleImages(): ArticleImage[] {
         const result: ArticleImage[] = [];
         const rawPaths = extractImagePathsFromMarkdown(this.markdownView.getViewData());
         const sourceFile = this.markdownView.file;
@@ -252,7 +257,7 @@ export class CoverImageModal extends Modal {
             }
         }
 
-        return result.filter(img => img.file !== null);
+        return result;
     }
 
     onClose() {

@@ -64,7 +64,11 @@ export class WechatImageUploader {
         }
 
         if (!response) {
-            return { ok: false, message: '微信接口无响应，可能是网络、IP 白名单或 access token 获取失败。' };
+            const tokenError = this.apiClient.getLastTokenErrorMessage();
+            return {
+                ok: false,
+                message: tokenError || '微信接口无响应，可能是网络、IP 白名单或 access token 获取失败。',
+            };
         }
 
         if (response.json?.errcode && response.json.errcode !== 0) {
@@ -112,10 +116,10 @@ export class WechatImageUploader {
             return `图片格式不支持：${fileName}。微信公众号永久图片素材通常支持 bmp/png/jpeg/jpg/gif，请转换格式后重试。`;
         }
 
-        const maxBytes = 2 * 1024 * 1024;
+        const maxBytes = 10 * 1024 * 1024;
         if (byteLength > maxBytes) {
             const sizeMb = (byteLength / 1024 / 1024).toFixed(2);
-            return `图片过大：${fileName} (${sizeMb}MB)。微信公众号永久图片素材限制通常为 2MB 以内，请压缩后重试。`;
+            return `图片过大：${fileName} (${sizeMb}MB)。当前插件限制为 10MB 以内，请压缩后重试。`;
         }
 
         if (!mime.startsWith('image/')) {

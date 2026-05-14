@@ -7,6 +7,7 @@ import { ArticleRenderer } from '../../core/render/article-renderer';
 import { SAMPLE_ARTICLE_MARKDOWN } from '../../core/render/sample-article';
 
 type EditorTab = 'container' | 'title' | 'paragraph' | 'list' | 'quote' | 'code' | 'image' | 'link' | 'table' | 'hr' | 'emphasis';
+type SimpleStyleTab = 'paragraph' | 'quote' | 'image' | 'link' | 'hr';
 
 const TAB_LABELS: Record<EditorTab, string> = {
     container: '全局',
@@ -49,13 +50,7 @@ export class ThemeEditorModal extends Modal {
         const { contentEl } = this;
         contentEl.empty();
         contentEl.addClass('otw-theme-editor');
-
-        const modal = this.containerEl.querySelector('.modal') as HTMLElement;
-        if (modal) {
-            modal.style.maxWidth = '90vw';
-            modal.style.width = '90vw';
-            modal.style.height = '85vh';
-        }
+        this.containerEl.querySelector('.modal')?.addClass('otw-theme-editor-modal');
 
         this.loadThemes();
 
@@ -120,7 +115,7 @@ export class ThemeEditorModal extends Modal {
 
     private loadThemes() {
         const data = this.plugin.settingsManager.getSettings();
-        const saved = (data as any).structuredThemes as StructuredTheme[] | undefined;
+        const saved = data.structuredThemes;
 
         if (saved && saved.length > 0) {
             // 合并：保留已保存的自定义主题 + 最新的预设主题
@@ -139,7 +134,7 @@ export class ThemeEditorModal extends Modal {
 
     private saveThemes() {
         const customThemes = this.themes.filter(t => !t.isPreset);
-        this.plugin.settingsManager.updateSettings({ structuredThemes: customThemes } as any);
+        void this.plugin.settingsManager.updateSettings({ structuredThemes: customThemes });
     }
 
     private refreshThemeList() {
@@ -328,16 +323,16 @@ export class ThemeEditorModal extends Modal {
         }
     }
 
-    private renderSimpleTextarea(label: string, key: Exclude<EditorTab, 'container' | 'title' | 'list' | 'code' | 'table' | 'emphasis'>) {
+    private renderSimpleTextarea(label: string, key: SimpleStyleTab) {
         const t = this.activeTheme!;
         const container = this.tabContentEl.createDiv({ cls: 'otw-theme-editor-fields' });
         container.createEl('h4', { text: label });
 
-        const cssValue = (t as any)[key] as string || '';
+        const cssValue = t[key] || '';
         if (cssValue.includes('color')) {
             const colorInput = this.createColorField(container, '文字颜色', color => {
-                const current = (t as any)[key] as string || '';
-                (t as any)[key] = this.replaceColorInCss(current, `color: ${color};`);
+                const current = t[key] || '';
+                t[key] = this.replaceColorInCss(current, `color: ${color};`);
                 this.updatePreview();
                 if (!t.isPreset) this.saveThemes();
             });
@@ -345,7 +340,7 @@ export class ThemeEditorModal extends Modal {
         }
 
         this.createTextarea(container, '完整 CSS', cssValue, v => {
-            (t as any)[key] = v;
+            t[key] = v;
         });
     }
 
@@ -354,9 +349,9 @@ export class ThemeEditorModal extends Modal {
         const container = this.tabContentEl.createDiv({ cls: 'otw-theme-editor-fields' });
         container.createEl('h4', { text: '列表样式' });
 
-        this.createTextarea(container, '列表容器 CSS', t.list?.container || '', v => { t.list = { ...t.list, container: v } as any; });
-        this.createTextarea(container, '列表项 CSS', t.list?.item || '', v => { t.list = { ...t.list, item: v } as any; });
-        this.createTextarea(container, '任务列表 CSS', t.list?.taskList || '', v => { t.list = { ...t.list, taskList: v } as any; });
+        this.createTextarea(container, '列表容器 CSS', t.list?.container || '', v => { t.list = { ...t.list, container: v }; });
+        this.createTextarea(container, '列表项 CSS', t.list?.item || '', v => { t.list = { ...t.list, item: v }; });
+        this.createTextarea(container, '任务列表 CSS', t.list?.taskList || '', v => { t.list = { ...t.list, taskList: v }; });
     }
 
     private renderCodeTab() {
@@ -375,8 +370,8 @@ export class ThemeEditorModal extends Modal {
             colorInput.value = this.extractColor(blockCss);
         }
 
-        this.createTextarea(container, '代码块 CSS', t.code?.block || '', v => { t.code = { ...t.code, block: v } as any; });
-        this.createTextarea(container, '行内代码 CSS', t.code?.inline || '', v => { t.code = { ...t.code, inline: v } as any; });
+        this.createTextarea(container, '代码块 CSS', t.code?.block || '', v => { t.code = { ...t.code, block: v }; });
+        this.createTextarea(container, '行内代码 CSS', t.code?.inline || '', v => { t.code = { ...t.code, inline: v }; });
     }
 
     private renderTableTab() {
@@ -384,9 +379,9 @@ export class ThemeEditorModal extends Modal {
         const container = this.tabContentEl.createDiv({ cls: 'otw-theme-editor-fields' });
         container.createEl('h4', { text: '表格样式' });
 
-        this.createTextarea(container, '表格容器 CSS', t.table?.container || '', v => { t.table = { ...t.table, container: v } as any; });
-        this.createTextarea(container, '表头 CSS', t.table?.header || '', v => { t.table = { ...t.table, header: v } as any; });
-        this.createTextarea(container, '单元格 CSS', t.table?.cell || '', v => { t.table = { ...t.table, cell: v } as any; });
+        this.createTextarea(container, '表格容器 CSS', t.table?.container || '', v => { t.table = { ...t.table, container: v }; });
+        this.createTextarea(container, '表头 CSS', t.table?.header || '', v => { t.table = { ...t.table, header: v }; });
+        this.createTextarea(container, '单元格 CSS', t.table?.cell || '', v => { t.table = { ...t.table, cell: v }; });
     }
 
     private renderEmphasisTab() {
@@ -394,9 +389,9 @@ export class ThemeEditorModal extends Modal {
         const container = this.tabContentEl.createDiv({ cls: 'otw-theme-editor-fields' });
         container.createEl('h4', { text: '强调样式' });
 
-        this.createTextarea(container, '加粗 CSS', t.emphasis?.strong || '', v => { t.emphasis = { ...t.emphasis, strong: v } as any; });
-        this.createTextarea(container, '斜体 CSS', t.emphasis?.em || '', v => { t.emphasis = { ...t.emphasis, em: v } as any; });
-        this.createTextarea(container, '删除线 CSS', t.emphasis?.del || '', v => { t.emphasis = { ...t.emphasis, del: v } as any; });
+        this.createTextarea(container, '加粗 CSS', t.emphasis?.strong || '', v => { t.emphasis = { ...t.emphasis, strong: v }; });
+        this.createTextarea(container, '斜体 CSS', t.emphasis?.em || '', v => { t.emphasis = { ...t.emphasis, em: v }; });
+        this.createTextarea(container, '删除线 CSS', t.emphasis?.del || '', v => { t.emphasis = { ...t.emphasis, del: v }; });
     }
 
     // --- Actions ---

@@ -48,7 +48,7 @@ export class PublishModal extends Modal {
             }
             accountSelect.addEventListener('change', () => {
                 this.selectedAccountId = accountSelect.value;
-                this.plugin.settingsManager.updateSettings({ lastSelectedAccountId: this.selectedAccountId });
+                void this.plugin.settingsManager.updateSettings({ lastSelectedAccountId: this.selectedAccountId });
             });
             accountField.appendChild(accountSelect);
         } else {
@@ -107,7 +107,8 @@ export class PublishModal extends Modal {
         const publishButtonContainer = contentEl.createDiv({ cls: 'otw-publish-actions' });
         const publishButton = publishButtonContainer.createEl('button', { text: '发布到草稿箱', cls: 'otw-publish-button' });
 
-        publishButton.addEventListener('click', async () => {
+        publishButton.addEventListener('click', () => {
+            void (async () => {
             const title = this.titleInput.value;
             if (!title) { new Notice('请输入标题'); return; }
             if (!this.markdownView.file) { new Notice('无法获取当前文件'); return; }
@@ -150,6 +151,7 @@ export class PublishModal extends Modal {
                 publishButton.disabled = false;
                 publishButton.textContent = '发布到草稿箱';
             }
+            })();
         });
     }
 

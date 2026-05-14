@@ -6,7 +6,7 @@
     flex-direction: column;
 }
 
-.otw-theme-editor .modal {
+.modal.otw-theme-editor-modal {
     max-width: 90vw !important;
     width: 90vw !important;
     height: 85vh !important;

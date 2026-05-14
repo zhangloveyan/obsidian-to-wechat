@@ -27,10 +27,10 @@ function sanitize(args: unknown[]): unknown[] {
 export function createLogger(debugMode = false) {
     return {
         debug(...args: unknown[]) {
-            if (debugMode) console.log('[DEBUG]', ...sanitize(args));
+            if (debugMode) console.debug('[DEBUG]', ...sanitize(args));
         },
         info(...args: unknown[]) {
-            if (debugMode) console.log('[INFO]', ...sanitize(args));
+            if (debugMode) console.debug('[INFO]', ...sanitize(args));
         },
         warn(...args: unknown[]) {
             console.warn('[WARN]', ...args);

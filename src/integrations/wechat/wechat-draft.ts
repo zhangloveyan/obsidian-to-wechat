@@ -1,6 +1,5 @@
 import { requestUrl, Notice, TFile } from 'obsidian';
 import type { WechatApiClient } from './wechat-api-client';
-import { getOrCreateMetadata, updateMetadata, updateDraftMetadata } from '../../types/metadata';
 import type { SettingsManager } from '../../features/settings/settings';
 
 export interface DraftOptions {
@@ -25,8 +24,6 @@ export class WechatDraftPublisher {
     /** Create or update a draft */
     async publish(options: DraftOptions): Promise<boolean> {
         const { title, content, thumbMediaId, file } = options;
-        const metadata = getOrCreateMetadata(this.settingsManager, file);
-
         const articles = {
             title,
             content,
@@ -49,7 +46,8 @@ export class WechatDraftPublisher {
         });
 
         if (!response) {
-            new Notice('创建微信公众号草稿失败：微信接口无响应，请检查网络、IP 白名单和公众号配置。');
+            const tokenError = this.apiClient.getLastTokenErrorMessage();
+            new Notice(`创建微信公众号草稿失败：${tokenError || '微信接口无响应，请检查网络、IP 白名单和公众号配置。'}`);
             return false;
         }
 
@@ -67,14 +65,6 @@ export class WechatDraftPublisher {
             return false;
         }
 
-        updateDraftMetadata(metadata, {
-            title,
-            content,
-            media_id: response.json.media_id,
-            item: response.json.item || metadata.draft?.item,
-        });
-        await updateMetadata(this.settingsManager, file, metadata);
-
         new Notice('成功发布到微信公众号草稿箱');
         return true;
     }
@@ -90,7 +80,8 @@ export class WechatDraftPublisher {
         });
 
         if (!response) {
-            new Notice('获取微信素材列表失败：微信接口无响应，请检查网络、IP 白名单和公众号配置。');
+            const tokenError = this.apiClient.getLastTokenErrorMessage();
+            new Notice(`获取微信素材列表失败：${tokenError || '微信接口无响应，请检查网络、IP 白名单和公众号配置。'}`);
             return { items: [], totalCount: 0 };
         }
 

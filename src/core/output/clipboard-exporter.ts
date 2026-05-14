@@ -1,14 +1,18 @@
+import { requestUrl } from 'obsidian';
+
 export class ClipboardExporter {
     private static async inlineImages(container: HTMLElement): Promise<void> {
         const images = container.querySelectorAll('img');
         for (const img of Array.from(images)) {
             try {
-                const response = await fetch((img as HTMLImageElement).src);
-                const blob = await response.blob();
+                const response = await requestUrl({ url: img.src });
+                const blob = new Blob([response.arrayBuffer], {
+                    type: response.headers['content-type'] || 'image/png',
+                });
                 const reader = new FileReader();
                 await new Promise<void>((resolve, reject) => {
                     reader.onload = () => {
-                        (img as HTMLImageElement).src = reader.result as string;
+                        img.src = String(reader.result || '');
                         resolve();
                     };
                     reader.onerror = reject;
@@ -34,4 +38,3 @@ export class ClipboardExporter {
         await navigator.clipboard.write([clipData]);
     }
 }
-

@@ -6,6 +6,7 @@ import { WechatDraftPublisher } from './wechat-draft';
 import type { Logger } from '../../shared/logger';
 import type { SettingsManager } from '../../features/settings/settings';
 import { getOrCreateMetadata, isImageUploaded, addImageMetadata, updateMetadata } from '../../types/metadata';
+import type { DocumentMetadata } from '../../types/metadata';
 import { isRemoteOrDataImage, normalizeImagePath, resolveImageFile } from './image-path-resolver';
 
 /**
@@ -141,7 +142,7 @@ export class WechatPublisher {
     private async processImage(
         imagePath: string,
         file: TFile,
-        metadata: any,
+        metadata: DocumentMetadata,
     ): Promise<{ url: string | null; message: string }> {
         const normalizedPath = normalizeImagePath(imagePath);
 
@@ -185,7 +186,7 @@ export class WechatPublisher {
         imagePath: string,
         normalizedPath: string,
         file: TFile,
-        metadata: any,
+        metadata: DocumentMetadata,
     ): Promise<{ url: string | null; message: string }> {
         let imageMetadata = isImageUploaded(metadata, imagePath);
         if (!imageMetadata) {
@@ -222,7 +223,7 @@ export class WechatPublisher {
         imagePath: string,
         normalizedPath: string,
         file: TFile,
-        metadata: any,
+        metadata: DocumentMetadata,
     ): Promise<{ url: string | null; message: string }> {
         const resolved = resolveImageFile(this.settingsManager.plugin.app, normalizedPath, file.path);
         if (!resolved.file) {

@@ -23,7 +23,7 @@ export function transformCodeBlocks(container: HTMLElement): void {
             return;
         }
 
-        const codeEl = pre.querySelector('code') as HTMLElement | null;
+        const codeEl = pre.querySelector<HTMLElement>('code');
         if (!codeEl) return;
 
         const highlighted = highlightCodeElement(codeEl);
@@ -56,4 +56,3 @@ export function transformCodeBlocks(container: HTMLElement): void {
         pre.replaceWith(newSection);
     });
 }
-

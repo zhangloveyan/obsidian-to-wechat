@@ -8,28 +8,8 @@ export interface ImageMetadata {
     uploadTime: number;
 }
 
-export interface DraftMetadata {
-    media_id: string;
-    item: Array<{
-        index: number;
-        ad_count: number;
-    }>;
-    title: string;
-    content: string;
-    updateTime: number;
-}
-
 export interface DocumentMetadata {
     images: { [key: string]: ImageMetadata };
-    draft?: DraftMetadata;
-}
-
-/** Draft update data for type-safe metadata updates */
-export interface DraftUpdateData {
-    title: string;
-    content: string;
-    media_id?: string;
-    item?: Array<{ index: number; ad_count: number }>;
 }
 
 export function getOrCreateMetadata(
@@ -64,14 +44,4 @@ export function isImageUploaded(metadata: DocumentMetadata, fileName: string): I
 
 export function addImageMetadata(metadata: DocumentMetadata, fileName: string, imageData: ImageMetadata): void {
     metadata.images[fileName] = imageData;
-}
-
-export function updateDraftMetadata(metadata: DocumentMetadata, draftData: DraftUpdateData): void {
-    metadata.draft = {
-        media_id: draftData.media_id || '',
-        item: draftData.item || [],
-        title: draftData.title,
-        content: draftData.content,
-        updateTime: Date.now(),
-    };
 }

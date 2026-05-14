@@ -16,7 +16,7 @@ export class ArticleRenderer {
         );
         this.applyTheme(container, request);
 
-        return container.querySelector('.otw-content-section') as HTMLElement | null;
+        return container.querySelector<HTMLElement>('.otw-content-section');
     }
 
     static async renderHtml(request: ArticleRenderRequest): Promise<string> {
@@ -30,7 +30,7 @@ export class ArticleRenderer {
     }
 
     private static applyTheme(container: HTMLElement, request: ArticleRenderRequest): void {
-        const section = container.querySelector('.otw-content-section') as HTMLElement | null;
+        const section = container.querySelector<HTMLElement>('.otw-content-section');
         if (!section) return;
 
         const css = request.themeCss || request.themeManager?.getActiveThemeCSS() || '';

@@ -1,5 +1,6 @@
 import type { StructuredTheme } from '../../core/theme/theme-types';
 import type { DocumentMetadata } from '../../types/metadata';
+import type WechatPublisherPlugin from '../../plugin';
 
 export interface WechatAccount {
     id: string;
@@ -26,10 +27,10 @@ const DEFAULT_SETTINGS: MPSettings = {
 };
 
 export class SettingsManager {
-    plugin: any;
+    plugin: WechatPublisherPlugin;
     private settings: MPSettings;
 
-    constructor(plugin: any) {
+    constructor(plugin: WechatPublisherPlugin) {
         this.plugin = plugin;
         this.settings = { ...DEFAULT_SETTINGS };
     }

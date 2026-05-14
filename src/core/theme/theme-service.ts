@@ -12,8 +12,8 @@ export class ThemeManager {
         this.plugin = plugin;
     }
 
-    async initialize(): Promise<void> {
-        await this.reloadThemes();
+    initialize(): void {
+        this.reloadThemes();
 
         const data = this.plugin.settingsManager.getSettings();
         const activeId = data.activeThemeId || 'default';
@@ -21,7 +21,7 @@ export class ThemeManager {
     }
 
     /** 从设置重新加载主题列表（主题编辑器保存后调用） */
-    async reloadThemes(): Promise<void> {
+    reloadThemes(): void {
         const data = this.plugin.settingsManager.getSettings();
         const saved = data.structuredThemes;
 

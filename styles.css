@@ -124,6 +124,7 @@
 }
 
 .custom-select.disabled {
+    pointer-events: none;
     opacity: 0.5;
     background: var(--background-secondary) !important;
     color: var(--text-muted) !important;
@@ -334,7 +335,7 @@
     flex-direction: column;
 }
 
-.otw-theme-editor .modal {
+.modal.otw-theme-editor-modal {
     max-width: 90vw !important;
     width: 90vw !important;
     height: 85vh !important;

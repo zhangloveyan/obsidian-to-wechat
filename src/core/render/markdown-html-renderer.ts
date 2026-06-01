@@ -320,9 +320,21 @@ export async function renderMarkdownContentToElement(
     }
 
     cleanObsidianUIElements(container);
+    normalizeSoftBreakWhitespace(container);
     ContentTransformer.formatContent(container, sourcePath);
 
     return processedMarkdown;
+}
+
+function normalizeSoftBreakWhitespace(container: HTMLElement): void {
+    container.querySelectorAll('br').forEach(br => {
+        if (br.closest('pre, code')) return;
+
+        const next = br.nextSibling;
+        if (next?.nodeType !== Node.TEXT_NODE) return;
+
+        next.textContent = next.textContent?.replace(/^[\t\r\n ]+/, '') ?? '';
+    });
 }
 
 /**

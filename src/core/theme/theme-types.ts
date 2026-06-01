@@ -147,6 +147,7 @@ export function themeToCSS(theme: StructuredTheme): string {
     // 段落
     if (theme.paragraph) {
         parts.push(`.otw-content-section p { ${theme.paragraph} }`);
+        parts.push('.otw-content-section > p:first-of-type { margin-top: 0; }');
     }
 
     // 列表

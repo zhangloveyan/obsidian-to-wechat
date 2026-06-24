@@ -77,13 +77,67 @@
 }
 
 .otw-controls-group .otw-copy-button {
+    width: 72px;
     background-color: var(--text-accent);
     color: var(--text-on-accent);
     border: none;
 }
-.otw-controls-group .otw-copy-button:hover {
+
+.otw-controls-group .otw-generate-image-button,
+.otw-controls-group .otw-preview-publish-button {
+    width: 72px;
+    background-color: var(--text-accent);
+    color: var(--text-on-accent);
+    border: none;
+}
+
+.otw-controls-group .otw-copy-button:hover,
+.otw-controls-group .otw-generate-image-button:hover,
+.otw-controls-group .otw-preview-publish-button:hover {
     color: var(--text-on-accent);
     background-color: var(--text-accent);
+}
+
+.otw-image-progress {
+    display: none;
+    padding: 10px 12px;
+    border-top: 1px solid var(--background-modifier-border);
+    background: var(--background-primary);
+}
+
+.otw-image-progress.is-visible {
+    display: block;
+}
+
+.otw-image-progress-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-normal);
+    line-height: 1.4;
+}
+
+.otw-image-progress-detail {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.otw-image-progress-track {
+    height: 6px;
+    margin-top: 8px;
+    border-radius: 999px;
+    background: var(--background-modifier-border);
+    overflow: hidden;
+}
+
+.otw-image-progress-bar {
+    width: 0%;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--text-accent);
+    transition: width 0.2s ease;
 }
 
 /* ===== 下拉选择器 ===== */
@@ -192,111 +246,6 @@
     border: 1px solid rgba(82, 144, 220, 0.08);
 }
 
-/* 段落 */
-.otw-content-section p {
-    margin: 0;
-    padding: 0;
-}
-
-/* 列表 */
-.otw-content-section ul,ol {
-    margin: 0;
-    padding: 0;
-}
-
-/* 链接样式 */
-.otw-content-section a {
-    color: var(--text-accent);
-    text-decoration: none;
-}
-
-/* 表格样式 */
-.otw-content-section table {
-    border-collapse: collapse;
-    margin: 1em 0;
-    width: 100%;
-}
-
-.otw-content-section th,
-.otw-content-section td {
-    border: 1px solid var(--background-modifier-border);
-    padding: 8px;
-}
-
-/* 分割线样式 */
-.otw-content-section hr {
-    border: none;
-    border-top: 1px solid var(--background-modifier-border);
-    margin: 20px 0;
-}
-
-/* 删除线样式 */
-.otw-content-section del {
-    text-decoration: line-through;
-}
-
-/* 任务列表样式 */
-.otw-content-section .task-list-item {
-    list-style: none;
-}
-
-.otw-content-section .task-list-item input[type="checkbox"] {
-    margin-right: 6px;
-}
-
-/* 脚注样式 */
-.otw-content-section .footnote-ref,
-.otw-content-section .footnote-backref {
-    color: var(--text-accent);
-    text-decoration: none;
-}
-
-/* 图片样式 */
-.otw-content-section img {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    margin: 1em auto;
-}
-
-/* 代码块样式 — 代码块现由 converter.ts 直接注入 inline style，
-   此处仅保留不影响预览的兜底样式（去掉 !important 避免冲突） */
-.otw-content-section pre {
-    overflow-x: auto;
-    white-space: pre;
-    word-break: normal;
-    tab-size: 4;
-    padding: 1em;
-    margin: 1em 0;
-    background: #f5f5f5;
-    border-radius: 6px;
-}
-
-.otw-content-section pre code {
-    white-space: pre;
-    word-break: normal;
-    overflow-wrap: normal;
-    font-family: "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace;
-}
-
-/* 行内代码样式 */
-.otw-content-section code:not(pre code) {
-    word-break: break-word;
-    background: #f5f5f5;
-    padding: 2px 4px;
-    border-radius: 3px;
-    font-size: 0.9em;
-}
-
-/* 引用块样式 */
-.otw-content-section blockquote p {
-    margin: 0;
-    padding: 0;
-    line-height: inherit;
-}
-
-
-
 .otw-empty-message {
     display: flex;
     justify-content: center;
@@ -305,7 +254,6 @@
     color: var(--text-muted);
     font-size: 16px;
 }
-
 
 /* src/styles/settings/settings.css */
 /* 整体容器 */
@@ -324,6 +272,303 @@
     border-bottom: 2px solid var(--background-modifier-border);
     font-size: 1.6em;
     color: var(--text-normal);
+}
+
+.otw-regex-rules {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 12px 0;
+}
+
+.otw-regex-rule-card {
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    padding: 12px;
+    background: var(--background-secondary);
+}
+
+.otw-regex-rule-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.otw-regex-rule-title {
+    font-weight: 600;
+    color: var(--text-normal);
+}
+
+.otw-regex-rule-delete {
+    flex: 0 0 auto;
+}
+
+.otw-regex-rule-test-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.otw-regex-rule-result {
+    color: var(--text-muted);
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.otw-image-generation-summary,
+.otw-image-generation-format {
+    margin: 8px 0;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.modal.otw-image-generation-modal {
+    width: min(900px, 90vw);
+}
+
+.otw-modal-heading {
+    align-items: flex-start;
+    padding-left: 0;
+}
+
+.otw-modal-heading .setting-item-info {
+    margin-left: 0;
+}
+
+.otw-modal-heading .setting-item-name {
+    font-size: 1.5em;
+    line-height: 1.2;
+    text-align: left;
+}
+
+.otw-api-text-input {
+    width: 320px;
+    min-width: 320px;
+    max-width: 320px;
+}
+
+.otw-api-text-setting .setting-item-control,
+.otw-api-text-setting .setting-item-control .text-component {
+    flex: 0 0 320px;
+}
+
+.otw-api-key-setting .setting-item-control {
+    position: relative;
+}
+
+.otw-api-key-setting .text-component {
+    flex: 0 0 320px;
+}
+
+.otw-api-key-input {
+    padding-right: 36px;
+}
+
+.otw-api-key-toggle {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.otw-api-key-toggle.clickable-icon {
+    padding: 4px;
+}
+
+.otw-prompt-format-section {
+    margin-top: 12px;
+    padding: 12px 0;
+    background: var(--background-primary);
+}
+
+.otw-two-field-row {
+    display: grid;
+    grid-template-columns: auto minmax(120px, 1fr) auto minmax(120px, 1fr);
+    gap: 8px;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.otw-inline-field-label {
+    color: var(--text-normal);
+    white-space: nowrap;
+}
+
+.otw-two-field-row select {
+    width: 100%;
+}
+
+.otw-prompt-format-title {
+    margin-bottom: 8px;
+    font-weight: 400;
+    color: var(--text-normal);
+}
+
+.otw-prompt-format-code {
+    display: block;
+    padding: 8px;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-normal);
+    white-space: pre-wrap;
+}
+
+.otw-prompt-format-section textarea {
+    width: 100%;
+    min-width: 420px;
+}
+
+.otw-prompt-test-block {
+    margin-top: 12px;
+}
+
+.otw-prompt-test-title {
+    font-weight: 600;
+    color: var(--text-normal);
+}
+
+.otw-prompt-test-desc {
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.otw-prompt-test-textarea {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.otw-prompt-format-test-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.otw-prompt-format-test-result {
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.otw-image-generation-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 8px 0 12px;
+}
+
+.otw-image-generation-all-button {
+    flex: 0 0 auto;
+}
+
+.otw-image-generation-task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.otw-image-generation-task {
+    padding: 6px 0;
+    background: var(--background-primary);
+}
+
+.otw-image-generation-task-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.otw-image-generation-task-index {
+    flex: 0 0 auto;
+    font-weight: 400;
+    color: var(--text-normal);
+}
+
+.otw-image-generation-prompt-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+}
+
+.otw-image-generation-task-button {
+    flex: 0 0 auto;
+}
+
+.otw-image-generation-status-line {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    padding-left: 24px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.otw-image-generation-task-status,
+.otw-image-generation-task-detail {
+    color: var(--text-muted);
+}
+
+.otw-image-generation-empty {
+    padding: 12px;
+    color: var(--text-muted);
+    border: 1px dashed var(--background-modifier-border);
+    border-radius: 8px;
+}
+
+.otw-account-manager-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.otw-account-manager-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    background: var(--background-secondary);
+}
+
+.otw-account-manager-info {
+    min-width: 0;
+}
+
+.otw-account-manager-name {
+    font-weight: 600;
+    color: var(--text-normal);
+}
+
+.otw-account-manager-appid {
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.otw-account-manager-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+.otw-account-manager-empty {
+    margin-top: 12px;
+    padding: 12px;
+    color: var(--text-muted);
+    border: 1px dashed var(--background-modifier-border);
+    border-radius: 8px;
 }
 
 /* src/styles/theme-editor.css */
@@ -354,7 +599,7 @@
 .otw-theme-editor-sidebar {
     width: 200px;
     min-width: 200px;
-    background: var(--background-secondary);
+    background: var(--background-primary);
     border-right: 1px solid var(--background-modifier-border);
     padding: 16px;
     display: flex;
@@ -372,7 +617,7 @@
     padding: 8px;
     border: 1px dashed var(--background-modifier-border);
     border-radius: 6px;
-    background: var(--background-primary);
+    background: transparent;
     color: var(--text-muted);
     cursor: pointer;
     font-size: 13px;
@@ -399,6 +644,7 @@
     cursor: pointer;
     font-size: 13px;
     color: var(--text-normal);
+    background: transparent;
     transition: all 0.15s;
 }
 
@@ -639,59 +885,6 @@
     border-radius: 8px;
     padding: 20px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-}
-
-.otw-theme-editor-preview-content .otw-content-section {
-    font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
-}
-
-.otw-theme-editor-preview-content pre {
-    overflow-x: auto;
-    white-space: pre !important;
-    word-break: normal !important;
-    tab-size: 4 !important;
-}
-
-.otw-theme-editor-preview-content pre code {
-    white-space: pre !important;
-    word-break: normal !important;
-}
-
-.otw-theme-editor-preview-content img {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    margin: 1em auto;
-}
-
-.otw-theme-editor-preview-content table {
-    border-collapse: collapse;
-    margin: 1em 0;
-    width: 100%;
-}
-
-.otw-theme-editor-preview-content th,
-.otw-theme-editor-preview-content td {
-    border: 1px solid var(--background-modifier-border);
-    padding: 8px;
-}
-
-.otw-theme-editor-preview-content hr {
-    border: none;
-    border-top: 1px solid var(--background-modifier-border);
-    margin: 20px 0;
-}
-
-.otw-theme-editor-preview-content a {
-    color: var(--interactive-accent);
-    text-decoration: none;
-}
-
-.otw-theme-editor-preview-content code:not(pre code) {
-    background: #f5f5f5;
-    padding: 2px 4px;
-    border-radius: 3px;
-    font-size: 0.9em;
 }
 
 /* src/styles/index.css */

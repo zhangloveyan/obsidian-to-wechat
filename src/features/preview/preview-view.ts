@@ -1,10 +1,11 @@
-import { ItemView, WorkspaceLeaf, TFile, setIcon, MarkdownView } from 'obsidian';
+import { ItemView, WorkspaceLeaf, TFile, setIcon, MarkdownView, Notice } from 'obsidian';
 import { ArticleRenderer } from '../../core/render/article-renderer';
 import { ClipboardExporter } from '../../core/output/clipboard-exporter';
 import type { SettingsManager } from '../settings/settings';
 import type { ThemeManager } from '../../core/theme/theme-service';
 import type WechatPublisherPlugin from '../../plugin';
 import { showPublishModal } from '../publish/platform-index';
+import { ArticleImageGenerationModal } from '../image-generation/article-image-generation-modal';
 
 export const VIEW_TYPE_PREVIEW = 'otw-preview';
 
@@ -13,7 +14,13 @@ export class PreviewView extends ItemView {
     private currentFile: TFile | null = null;
     private updateTimer: ReturnType<typeof setTimeout> | null = null;
     private refreshButton!: HTMLButtonElement;
+    private generateImageButton!: HTMLButtonElement;
     private copyButton!: HTMLButtonElement;
+    private publishButton!: HTMLButtonElement;
+    private imageProgressEl!: HTMLElement;
+    private imageProgressTitleEl!: HTMLElement;
+    private imageProgressDetailEl!: HTMLElement;
+    private imageProgressBarEl!: HTMLElement;
     private themeManager: ThemeManager;
     private settingsManager: SettingsManager;
     private customThemeSelect!: HTMLElement;
@@ -71,9 +78,18 @@ export class PreviewView extends ItemView {
         const settings = this.settingsManager.getSettings();
         if (settings.activeThemeId) this.restoreSelectValue(this.customThemeSelect, settings.activeThemeId, themeOptions);
 
-        this.copyButton = controlsGroup.createEl('button', { text: '复制到公众号', cls: 'otw-copy-button' });
+        this.generateImageButton = controlsGroup.createEl('button', { text: '生图', cls: 'otw-generate-image-button' });
 
-        const publishButton = controlsGroup.createEl('button', { text: '发布', cls: 'otw-publish-button' });
+        this.copyButton = controlsGroup.createEl('button', { text: '复制', cls: 'otw-copy-button' });
+
+        this.publishButton = controlsGroup.createEl('button', { text: '发布', cls: 'otw-preview-publish-button' });
+
+        this.imageProgressEl = container.createEl('div', { cls: 'otw-image-progress' });
+        this.imageProgressTitleEl = this.imageProgressEl.createEl('div', { cls: 'otw-image-progress-title' });
+        this.imageProgressDetailEl = this.imageProgressEl.createEl('div', { cls: 'otw-image-progress-detail' });
+        const progressTrack = this.imageProgressEl.createEl('div', { cls: 'otw-image-progress-track' });
+        this.imageProgressBarEl = progressTrack.createEl('div', { cls: 'otw-image-progress-bar' });
+        this.hideImageProgress();
 
         this.previewEl = container.createEl('div', { cls: 'otw-preview-area' });
 
@@ -95,15 +111,19 @@ export class PreviewView extends ItemView {
                 await ClipboardExporter.copyHtml(htmlContent, content);
 
                 this.copyButton.setText('复制成功');
-                setTimeout(() => { this.copyButton.disabled = false; this.copyButton.setText('复制到公众号'); }, 2000);
+                setTimeout(() => { this.copyButton.disabled = false; this.copyButton.setText('复制'); }, 2000);
             } catch {
                 this.copyButton.setText('复制失败');
-                setTimeout(() => { this.copyButton.disabled = false; this.copyButton.setText('复制到公众号'); }, 2000);
+                setTimeout(() => { this.copyButton.disabled = false; this.copyButton.setText('复制'); }, 2000);
             }
             })();
         });
 
-        publishButton.addEventListener('click', () => {
+        this.generateImageButton.addEventListener('click', () => {
+            void this.generateArticleImages();
+        });
+
+        this.publishButton.addEventListener('click', () => {
             void (async () => {
             if (!this.currentFile) return;
 
@@ -225,6 +245,8 @@ export class PreviewView extends ItemView {
             themeSelect.classList.toggle('disabled', !enabled);
         }
         this.copyButton.disabled = !enabled;
+        this.generateImageButton.disabled = !enabled;
+        this.publishButton.disabled = !enabled;
     }
 
     async onFileOpen(file: TFile | null) {
@@ -275,6 +297,25 @@ export class PreviewView extends ItemView {
             component: this,
             themeManager: this.themeManager,
         });
+    }
+
+    private async generateArticleImages(): Promise<void> {
+        if (!this.currentFile) return;
+        new ArticleImageGenerationModal(this.app, this.currentFile, this.settingsManager).open();
+    }
+
+    private showImageProgress(title: string, detail: string, percent: number): void {
+        this.imageProgressEl.classList.add('is-visible');
+        this.imageProgressTitleEl.setText(title);
+        this.imageProgressDetailEl.setText(detail);
+        this.imageProgressBarEl.style.width = `${percent}%`;
+    }
+
+    private hideImageProgress(): void {
+        this.imageProgressEl.classList.remove('is-visible');
+        this.imageProgressTitleEl.setText('');
+        this.imageProgressDetailEl.setText('');
+        this.imageProgressBarEl.style.width = '0%';
     }
 
     private createCustomSelect(parent: HTMLElement, options: { value: string; label: string }[]) {

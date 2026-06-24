@@ -25,7 +25,7 @@
 .otw-theme-editor-sidebar {
     width: 200px;
     min-width: 200px;
-    background: var(--background-secondary);
+    background: var(--background-primary);
     border-right: 1px solid var(--background-modifier-border);
     padding: 16px;
     display: flex;
@@ -43,7 +43,7 @@
     padding: 8px;
     border: 1px dashed var(--background-modifier-border);
     border-radius: 6px;
-    background: var(--background-primary);
+    background: transparent;
     color: var(--text-muted);
     cursor: pointer;
     font-size: 13px;
@@ -70,6 +70,7 @@
     cursor: pointer;
     font-size: 13px;
     color: var(--text-normal);
+    background: transparent;
     transition: all 0.15s;
 }
 
@@ -310,57 +311,4 @@
     border-radius: 8px;
     padding: 20px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-}
-
-.otw-theme-editor-preview-content .otw-content-section {
-    font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
-}
-
-.otw-theme-editor-preview-content pre {
-    overflow-x: auto;
-    white-space: pre !important;
-    word-break: normal !important;
-    tab-size: 4 !important;
-}
-
-.otw-theme-editor-preview-content pre code {
-    white-space: pre !important;
-    word-break: normal !important;
-}
-
-.otw-theme-editor-preview-content img {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    margin: 1em auto;
-}
-
-.otw-theme-editor-preview-content table {
-    border-collapse: collapse;
-    margin: 1em 0;
-    width: 100%;
-}
-
-.otw-theme-editor-preview-content th,
-.otw-theme-editor-preview-content td {
-    border: 1px solid var(--background-modifier-border);
-    padding: 8px;
-}
-
-.otw-theme-editor-preview-content hr {
-    border: none;
-    border-top: 1px solid var(--background-modifier-border);
-    margin: 20px 0;
-}
-
-.otw-theme-editor-preview-content a {
-    color: var(--interactive-accent);
-    text-decoration: none;
-}
-
-.otw-theme-editor-preview-content code:not(pre code) {
-    background: #f5f5f5;
-    padding: 2px 4px;
-    border-radius: 3px;
-    font-size: 0.9em;
 }

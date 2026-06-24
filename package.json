@@ -1,6 +1,6 @@
 {
   "name": "obsidian-to-wechat",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Preview, style, copy, and publish Markdown notes to multiple WeChat Official Accounts.",
   "main": "main.js",
   "scripts": {

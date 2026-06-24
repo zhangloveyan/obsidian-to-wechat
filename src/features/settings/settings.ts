@@ -9,6 +9,16 @@ export interface WechatAccount {
     appSecret: string;
 }
 
+export interface ImageGenerationSettings {
+    apiKey: string;
+    baseUrl: string;
+    model: string;
+    size: string;
+    resolution: string;
+    timeoutSeconds: number;
+    pollIntervalSeconds: number;
+}
+
 export interface MPSettings {
     activeThemeId: string;
     wechatAccounts: WechatAccount[];
@@ -16,7 +26,18 @@ export interface MPSettings {
     lastSelectedAccountId?: string;
     structuredThemes: StructuredTheme[];
     documentMetadata: Record<string, DocumentMetadata>;
+    imageGeneration: ImageGenerationSettings;
 }
+
+export const DEFAULT_IMAGE_GENERATION_SETTINGS: ImageGenerationSettings = {
+    apiKey: '',
+    baseUrl: 'https://api.apimart.ai',
+    model: 'gemini-3.1-flash-image-preview',
+    size: '16:9',
+    resolution: '2K',
+    timeoutSeconds: 180,
+    pollIntervalSeconds: 2,
+};
 
 const DEFAULT_SETTINGS: MPSettings = {
     activeThemeId: 'default',
@@ -24,6 +45,7 @@ const DEFAULT_SETTINGS: MPSettings = {
     defaultAccountId: '',
     structuredThemes: [],
     documentMetadata: {},
+    imageGeneration: DEFAULT_IMAGE_GENERATION_SETTINGS,
 };
 
 export class SettingsManager {
@@ -45,6 +67,11 @@ export class SettingsManager {
         if (!savedData.structuredThemes) {
             savedData.structuredThemes = [];
         }
+
+        savedData.imageGeneration = {
+            ...DEFAULT_IMAGE_GENERATION_SETTINGS,
+            ...(savedData.imageGeneration || {}),
+        };
 
         this.settings = { ...DEFAULT_SETTINGS, ...savedData };
     }

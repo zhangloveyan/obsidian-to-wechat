@@ -15,3 +15,300 @@
     font-size: 1.6em;
     color: var(--text-normal);
 }
+
+.otw-regex-rules {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 12px 0;
+}
+
+.otw-regex-rule-card {
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    padding: 12px;
+    background: var(--background-secondary);
+}
+
+.otw-regex-rule-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.otw-regex-rule-title {
+    font-weight: 600;
+    color: var(--text-normal);
+}
+
+.otw-regex-rule-delete {
+    flex: 0 0 auto;
+}
+
+.otw-regex-rule-test-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.otw-regex-rule-result {
+    color: var(--text-muted);
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.otw-image-generation-summary,
+.otw-image-generation-format {
+    margin: 8px 0;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.modal.otw-image-generation-modal {
+    width: min(900px, 90vw);
+}
+
+.otw-modal-heading {
+    align-items: flex-start;
+    padding-left: 0;
+}
+
+.otw-modal-heading .setting-item-info {
+    margin-left: 0;
+}
+
+.otw-modal-heading .setting-item-name {
+    font-size: 1.5em;
+    line-height: 1.2;
+    text-align: left;
+}
+
+.otw-api-text-input {
+    width: 320px;
+    min-width: 320px;
+    max-width: 320px;
+}
+
+.otw-api-text-setting .setting-item-control,
+.otw-api-text-setting .setting-item-control .text-component {
+    flex: 0 0 320px;
+}
+
+.otw-api-key-setting .setting-item-control {
+    position: relative;
+}
+
+.otw-api-key-setting .text-component {
+    flex: 0 0 320px;
+}
+
+.otw-api-key-input {
+    padding-right: 36px;
+}
+
+.otw-api-key-toggle {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.otw-api-key-toggle.clickable-icon {
+    padding: 4px;
+}
+
+.otw-prompt-format-section {
+    margin-top: 12px;
+    padding: 12px 0;
+    background: var(--background-primary);
+}
+
+.otw-two-field-row {
+    display: grid;
+    grid-template-columns: auto minmax(120px, 1fr) auto minmax(120px, 1fr);
+    gap: 8px;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.otw-inline-field-label {
+    color: var(--text-normal);
+    white-space: nowrap;
+}
+
+.otw-two-field-row select {
+    width: 100%;
+}
+
+.otw-prompt-format-title {
+    margin-bottom: 8px;
+    font-weight: 400;
+    color: var(--text-normal);
+}
+
+.otw-prompt-format-code {
+    display: block;
+    padding: 8px;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-normal);
+    white-space: pre-wrap;
+}
+
+.otw-prompt-format-section textarea {
+    width: 100%;
+    min-width: 420px;
+}
+
+.otw-prompt-test-block {
+    margin-top: 12px;
+}
+
+.otw-prompt-test-title {
+    font-weight: 600;
+    color: var(--text-normal);
+}
+
+.otw-prompt-test-desc {
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.otw-prompt-test-textarea {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.otw-prompt-format-test-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.otw-prompt-format-test-result {
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.otw-image-generation-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 8px 0 12px;
+}
+
+.otw-image-generation-all-button {
+    flex: 0 0 auto;
+}
+
+.otw-image-generation-task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.otw-image-generation-task {
+    padding: 6px 0;
+    background: var(--background-primary);
+}
+
+.otw-image-generation-task-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.otw-image-generation-task-index {
+    flex: 0 0 auto;
+    font-weight: 400;
+    color: var(--text-normal);
+}
+
+.otw-image-generation-prompt-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+}
+
+.otw-image-generation-task-button {
+    flex: 0 0 auto;
+}
+
+.otw-image-generation-status-line {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    padding-left: 24px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.otw-image-generation-task-status,
+.otw-image-generation-task-detail {
+    color: var(--text-muted);
+}
+
+.otw-image-generation-empty {
+    padding: 12px;
+    color: var(--text-muted);
+    border: 1px dashed var(--background-modifier-border);
+    border-radius: 8px;
+}
+
+.otw-account-manager-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.otw-account-manager-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    background: var(--background-secondary);
+}
+
+.otw-account-manager-info {
+    min-width: 0;
+}
+
+.otw-account-manager-name {
+    font-weight: 600;
+    color: var(--text-normal);
+}
+
+.otw-account-manager-appid {
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.otw-account-manager-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+.otw-account-manager-empty {
+    margin-top: 12px;
+    padding: 12px;
+    color: var(--text-muted);
+    border: 1px dashed var(--background-modifier-border);
+    border-radius: 8px;
+}

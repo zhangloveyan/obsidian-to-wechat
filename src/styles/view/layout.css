@@ -76,13 +76,67 @@
 }
 
 .otw-controls-group .otw-copy-button {
+    width: 72px;
     background-color: var(--text-accent);
     color: var(--text-on-accent);
     border: none;
 }
-.otw-controls-group .otw-copy-button:hover {
+
+.otw-controls-group .otw-generate-image-button,
+.otw-controls-group .otw-preview-publish-button {
+    width: 72px;
+    background-color: var(--text-accent);
+    color: var(--text-on-accent);
+    border: none;
+}
+
+.otw-controls-group .otw-copy-button:hover,
+.otw-controls-group .otw-generate-image-button:hover,
+.otw-controls-group .otw-preview-publish-button:hover {
     color: var(--text-on-accent);
     background-color: var(--text-accent);
+}
+
+.otw-image-progress {
+    display: none;
+    padding: 10px 12px;
+    border-top: 1px solid var(--background-modifier-border);
+    background: var(--background-primary);
+}
+
+.otw-image-progress.is-visible {
+    display: block;
+}
+
+.otw-image-progress-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-normal);
+    line-height: 1.4;
+}
+
+.otw-image-progress-detail {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.otw-image-progress-track {
+    height: 6px;
+    margin-top: 8px;
+    border-radius: 999px;
+    background: var(--background-modifier-border);
+    overflow: hidden;
+}
+
+.otw-image-progress-bar {
+    width: 0%;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--text-accent);
+    transition: width 0.2s ease;
 }
 
 /* ===== 下拉选择器 ===== */

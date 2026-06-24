@@ -6,16 +6,26 @@ Preview, style, copy, and publish Markdown notes from Obsidian to WeChat Officia
 
 ## Features
 
-- Preview Markdown with WeChat-friendly formatting.
-- Adjust article styles with a visual theme editor.
-- Copy rendered content to the WeChat editor.
-- Publish notes to WeChat draft box.
-- Manage multiple WeChat Official Accounts.
-- Upload local and remote images to WeChat material storage.
-- Generate local article images from fixed Markdown prompt comments.
-- Render GitHub-style highlighted code blocks with Mac-style headers and line numbers.
+- Publish local Obsidian notes to WeChat: preview Markdown formatting in Obsidian, copy rendered content to the WeChat editor, or publish notes to the WeChat draft box.
+- Visual style editor: use built-in article themes and adjust headings, paragraphs, quotes, code blocks, images, tables, and other styles.
+- Multiple WeChat Official Accounts: configure multiple accounts and choose the target account before publishing.
+- APIMart image generation: generate article images from fixed `image-prompt` comments, save the images locally, and replace the prompts in the article.
 
 ## Installation
+
+### Install from the community plugin marketplace
+
+1. Open Obsidian settings.
+2. Go to `Community plugins` and turn off restricted mode.
+3. Click `Browse` and search for `Markdown WeChat Publisher`.
+4. Install and enable the plugin.
+
+Plugin marketplace page:
+[Markdown WeChat Publisher](https://community.obsidian.md/plugins/markdown-wechat-publisher)
+
+![Markdown WeChat Publisher in the Obsidian community plugin marketplace](pic/README/image-20260624125109700.png)
+
+### Manual installation
 
 1. Download the latest release files:
    - `main.js`
@@ -26,6 +36,8 @@ Preview, style, copy, and publish Markdown notes from Obsidian to WeChat Officia
    ```text
    .obsidian/plugins/markdown-wechat-publisher
    ```
+
+   ![Manual plugin folder](pic/README/image-20260624125227093.png)
 
 3. Put the three files into that folder.
 4. Restart Obsidian.
@@ -42,6 +54,8 @@ Each account requires:
 - App secret
 
 You can test the connection after entering the account credentials.
+
+![WeChat account settings](pic/README/image-20260624125323186.png)
 
 ### Image generation
 
@@ -60,6 +74,10 @@ Configure the image generation API URL, API key, model, aspect ratio, resolution
 3. Choose a theme and check the preview.
 4. Generate article images when the note contains `image-prompt` comments.
 5. Copy the rendered content to the WeChat editor, or publish it to the WeChat draft box.
+
+## Screenshots
+
+![Plugin preview](pic/README/image-20260624125418855.png)
 
 ## Privacy
 

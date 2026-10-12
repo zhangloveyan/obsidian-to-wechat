@@ -8,12 +8,14 @@ import { WechatPublisher } from './integrations/wechat/wechat-publisher';
 import { createLogger, Logger } from './shared/logger';
 import { WechatAccount } from './features/settings/settings';
 import { PLUGIN_ICON_ID, PLUGIN_ICON_SVG } from './shared/plugin-icon';
+import { ImageGenerationService } from './features/image-generation/image-generation-service';
 
 export default class WechatPublisherPlugin extends Plugin {
     settingsManager: SettingsManager;
     themeManager: ThemeManager;
     wechatPublisher: WechatPublisher;
     logger: Logger;
+    imageGeneration: ImageGenerationService;
 
     get settings() {
         return this.settingsManager.getSettings();
@@ -25,6 +27,8 @@ export default class WechatPublisherPlugin extends Plugin {
 
         this.settingsManager = new SettingsManager(this);
         await this.settingsManager.loadSettings();
+        this.imageGeneration = new ImageGenerationService(this.app, this.settingsManager);
+        this.register(() => this.imageGeneration.dispose());
 
         this.themeManager = new ThemeManager(this);
         this.themeManager.initialize();

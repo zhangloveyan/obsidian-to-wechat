@@ -1,179 +1,188 @@
-import { App, TFile } from 'obsidian';
-import type { SettingsManager } from '../settings/settings';
-import { ImageGenerationClient } from './image-generation-client';
-import {
-    collectImagePromptEntries,
-    ImagePromptEntry,
-    updatePromptLine,
-    upsertImageForPrompt,
-} from './prompt-extractor';
+import type { App, TFile } from 'obsidian';
+import type { ImageGenerationSettings, SettingsManager } from '../settings/settings';
+import { ImageGenerationClient, type GeneratedImageData } from './image-generation-client';
+import { collectImagePromptEntries, formatImagePromptLine, locatePrompt, updatePromptLine, upsertImageForPrompt } from './prompt-extractor';
+import type { PromptAnchor } from './prompt-extractor';
 
-export interface ImageGenerationProgress {
-    current: number;
-    total: number;
-    message: string;
-}
-
-export interface ImageGenerationResult {
-    generatedCount: number;
-    failedCount: number;
-    images: Array<{
-        prompt: string;
-        path: string;
-        relativePath: string;
-    }>;
-}
-
-export interface GeneratedPromptImage {
+export type ImageTaskStatus = 'idle' | 'queued' | 'generating' | 'generated' | 'failed';
+export interface ImagePromptTask {
+    id: number;
+    anchor: PromptAnchor;
     prompt: string;
-    path: string;
-    relativePath: string;
+    status: ImageTaskStatus;
+    detail: string;
+    imagePath: string | null;
 }
+interface Session {
+    tasks: ImagePromptTask[];
+    queue: Promise<void>;
+    listeners: Set<() => void>;
+}
+interface ImageClient {
+    generateImage(prompt: string, onProgress?: (message: string) => void, signal?: AbortSignal): Promise<GeneratedImageData>;
+}
+type ClientFactory = (settings: ImageGenerationSettings) => ImageClient;
 
 export class ImageGenerationService {
-    private app: App;
-    private settingsManager: SettingsManager;
+    private sessions = new Map<TFile, Session>();
+    private controller = new AbortController();
+    private nextId = 1;
 
-    constructor(app: App, settingsManager: SettingsManager) {
-        this.app = app;
-        this.settingsManager = settingsManager;
-    }
+    constructor(
+        private app: App,
+        private settingsManager: SettingsManager,
+        private createClient: ClientFactory = settings => new ImageGenerationClient(settings),
+    ) {}
 
-    async generateForFile(
-        file: TFile,
-        onProgress?: (progress: ImageGenerationProgress) => void,
-    ): Promise<ImageGenerationResult> {
-        const entries = await this.getPromptEntries(file);
-
-        if (entries.length === 0) {
-            return { generatedCount: 0, failedCount: 0, images: [] };
+    async getTasks(file: TFile): Promise<ImagePromptTask[]> {
+        const session = this.session(file);
+        if (!session.listeners.size && !session.tasks.some(isBusy)) {
+            const markdown = await this.app.vault.read(file);
+            session.tasks = collectImagePromptEntries(markdown).map(entry => ({
+                id: this.nextId++, anchor: { markdown, lineIndex: entry.lineIndex },
+                prompt: entry.prompt, status: entry.imagePath ? 'generated' : 'idle',
+                detail: entry.imagePath || '', imagePath: entry.imagePath,
+            }));
         }
-
-        const images: ImageGenerationResult['images'] = [];
-
-        for (let index = 0; index < entries.length; index++) {
-            const entry = entries[index];
-            const current = index + 1;
-            const total = entries.length;
-
-            const generated = await this.generatePromptImage(file, entry.lineIndex, entry.prompt, message => {
-                onProgress?.({ current, total, message: message || `开始生成第 ${current}/${total} 张图片。` });
-            });
-            images.push({
-                prompt: generated.prompt,
-                path: generated.path,
-                relativePath: generated.relativePath,
-            });
-            onProgress?.({ current, total, message: `生成成功：${generated.relativePath}` });
-        }
-
-        return {
-            generatedCount: images.length,
-            failedCount: entries.length - images.length,
-            images,
-        };
+        return session.tasks;
     }
 
-    async getPromptEntries(file: TFile): Promise<ImagePromptEntry[]> {
-        const markdown = await this.app.vault.cachedRead(file);
-        return collectImagePromptEntries(markdown);
+    subscribe(file: TFile, listener: () => void): () => void {
+        const session = this.session(file);
+        session.listeners.add(listener);
+        return () => { session.listeners.delete(listener); };
     }
 
-    async syncPrompt(file: TFile, lineIndex: number, prompt: string): Promise<void> {
-        const markdown = await this.app.vault.cachedRead(file);
-        await this.app.vault.modify(file, updatePromptLine(markdown, lineIndex, prompt));
+    syncPrompt(file: TFile, task: ImagePromptTask, prompt: string): Promise<void> {
+        if (isBusy(task)) return Promise.resolve();
+        formatImagePromptLine(prompt);
+        const value = prompt.trim();
+        task.prompt = value;
+        return this.enqueue(file, async () => {
+            await this.writePrompt(file, task, value);
+            this.notify(file);
+        });
     }
 
-    async generatePromptImage(
-        file: TFile,
-        lineIndex: number,
-        prompt: string,
-        onProgress?: (message: string) => void,
-    ): Promise<GeneratedPromptImage> {
-        const settings = this.settingsManager.getSettings().imageGeneration;
-        const client = new ImageGenerationClient(settings);
-        const normalizedPrompt = prompt.trim();
-
-        onProgress?.('正在同步提示词到文章。');
-        let markdown = await this.app.vault.cachedRead(file);
-        markdown = updatePromptLine(markdown, lineIndex, normalizedPrompt);
-        await this.app.vault.modify(file, markdown);
-
-        onProgress?.('正在提交图片生成任务。');
-        const image = await client.generateImage(normalizedPrompt, onProgress);
-        const targetPath = await this.nextImagePath(file, image.extension);
-        await this.ensureFolderExists(parentPath(targetPath));
-        await this.app.vault.createBinary(targetPath, image.data);
-
-        const relativePath = toArticleRelativePath(file, targetPath);
-        markdown = await this.app.vault.cachedRead(file);
-        const updatedMarkdown = upsertImageForPrompt(markdown, lineIndex, `![](${relativePath})`);
-        await this.app.vault.modify(file, updatedMarkdown);
-
-        return {
-            prompt: normalizedPrompt,
-            path: targetPath,
-            relativePath,
-        };
-    }
-
-    private async nextImagePath(file: TFile, extension: string): Promise<string> {
-        const folder = imageFolderPath(file);
-        const safeExtension = extension.startsWith('.') ? extension : `.${extension}`;
-        const baseName = `file-${formatDate(new Date())}`;
-        let candidate = `${folder}/${baseName}${safeExtension}`;
-        let suffix = 2;
-
-        while (await this.app.vault.adapter.exists(candidate)) {
-            candidate = `${folder}/${baseName}-${suffix}${safeExtension}`;
-            suffix++;
-        }
-
-        return candidate;
-    }
-
-    private async ensureFolderExists(folderPath: string): Promise<void> {
-        if (!folderPath) return;
-
-        const parts = folderPath.split('/').filter(Boolean);
-        let current = '';
-
-        for (const part of parts) {
-            current = current ? `${current}/${part}` : part;
-            if (!(await this.app.vault.adapter.exists(current))) {
-                await this.app.vault.createFolder(current);
+    generate(file: TFile, task: ImagePromptTask, prompt: string): Promise<void> {
+        if (isBusy(task)) return Promise.resolve();
+        formatImagePromptLine(prompt);
+        const value = prompt.trim();
+        const settings = { ...this.settingsManager.getSettings().imageGeneration };
+        task.prompt = value;
+        task.status = 'queued';
+        task.detail = '等待生成';
+        this.notify(file);
+        return this.enqueue(file, async () => {
+            let savedPath: string | undefined;
+            try {
+                this.checkActive();
+                task.status = 'generating';
+                task.detail = '正在同步提示词';
+                this.notify(file);
+                await this.writePrompt(file, task, value);
+                const client = this.createClient(settings);
+                const image = await client.generateImage(value, message => {
+                    task.detail = message;
+                    this.notify(file);
+                }, this.controller.signal);
+                this.checkActive();
+                savedPath = await this.saveImage(file, image);
+                task.detail = '正在回写文章';
+                this.notify(file);
+                await this.app.vault.process(file, markdown => {
+                    this.checkActive();
+                    const entry = locatePrompt(markdown, task.anchor);
+                    if (entry.prompt !== value) throw new Error('提示词已修改，生成结果未写入文章。');
+                    const original = collectImagePromptEntries(task.anchor.markdown).find(item => item.lineIndex === task.anchor.lineIndex);
+                    if (entry.imagePath !== original?.imagePath) throw new Error('关联图片已修改，生成结果未覆盖原图片。');
+                    const relative = articleRelativePath(file, savedPath!);
+                    const result = upsertImageForPrompt(markdown, entry.lineIndex, '![](<'+ relative + '>)');
+                    task.anchor = { markdown: result, lineIndex: entry.lineIndex };
+                    task.imagePath = relative;
+                    return result;
+                });
+                task.status = 'generated';
+                task.detail = task.imagePath || savedPath;
+            } catch (error) {
+                task.status = 'failed';
+                task.detail = formatError(error) + (savedPath ? ' 图片已保留：' + savedPath : '');
+            } finally {
+                this.notify(file);
             }
+        });
+    }
+
+    generateAll(file: TFile, tasks: ImagePromptTask[]): Promise<void> {
+        tasks.filter(task => !isBusy(task)).forEach(task => formatImagePromptLine(task.prompt));
+        const jobs = tasks.filter(task => !isBusy(task)).map(task => this.generate(file, task, task.prompt));
+        return Promise.all(jobs).then(() => undefined);
+    }
+
+    dispose(): void {
+        this.controller.abort();
+        for (const session of this.sessions.values()) session.listeners.clear();
+    }
+
+    private session(file: TFile): Session {
+        let session = this.sessions.get(file);
+        if (!session) {
+            session = { tasks: [], queue: Promise.resolve(), listeners: new Set() };
+            this.sessions.set(file, session);
         }
+        return session;
+    }
+
+    private enqueue(file: TFile, operation: () => Promise<void>): Promise<void> {
+        const session = this.session(file);
+        const result = session.queue.then(operation);
+        session.queue = result.catch(() => undefined);
+        return result;
+    }
+
+    private async writePrompt(file: TFile, task: ImagePromptTask, prompt: string): Promise<void> {
+        this.checkActive();
+        let anchor = task.anchor;
+        await this.app.vault.process(file, markdown => {
+            this.checkActive();
+            const entry = locatePrompt(markdown, task.anchor);
+            const result = updatePromptLine(markdown, entry.lineIndex, prompt);
+            anchor = { markdown: result, lineIndex: entry.lineIndex };
+            return result;
+        });
+        task.anchor = anchor;
+    }
+
+    private async saveImage(file: TFile, image: GeneratedImageData): Promise<string> {
+        const parent = file.path.slice(0, Math.max(0, file.path.lastIndexOf('/')));
+        const folder = (parent ? parent + '/' : '') + 'pic/' + file.basename;
+        let current = '';
+        for (const part of folder.split('/')) {
+            current = current ? current + '/' + part : part;
+            if (!(await this.app.vault.adapter.exists(current))) await this.app.vault.createFolder(current);
+        }
+        this.checkActive();
+        const path = folder + '/file-' + Date.now() + '-' + crypto.randomUUID().slice(0, 8) + image.extension;
+        await this.app.vault.createBinary(path, image.data);
+        return path;
+    }
+
+    private notify(file: TFile): void {
+        for (const listener of this.session(file).listeners) listener();
+    }
+
+    private checkActive(): void {
+        if (this.controller.signal.aborted) throw new Error('插件已卸载，任务停止回写。');
     }
 }
 
-function imageFolderPath(file: TFile): string {
-    const articleDir = parentPath(file.path);
-    const folder = `pic/${file.basename}`;
-    return articleDir ? `${articleDir}/${folder}` : folder;
+export function isBusy(task: ImagePromptTask): boolean {
+    return task.status === 'queued' || task.status === 'generating';
 }
-
-function toArticleRelativePath(file: TFile, imagePath: string): string {
-    const articleDir = parentPath(file.path);
-    if (!articleDir) return imagePath;
-    const prefix = `${articleDir}/`;
-    return imagePath.startsWith(prefix) ? imagePath.slice(prefix.length) : imagePath;
+function articleRelativePath(file: TFile, path: string): string {
+    const index = file.path.lastIndexOf('/');
+    return index < 0 ? path : path.slice(index + 1);
 }
-
-function parentPath(path: string): string {
-    const index = path.lastIndexOf('/');
-    return index >= 0 ? path.slice(0, index) : '';
-}
-
-function formatDate(date: Date): string {
-    const month = pad2(date.getMonth() + 1);
-    const day = pad2(date.getDate());
-    const hours = pad2(date.getHours());
-    const minutes = pad2(date.getMinutes());
-    const seconds = pad2(date.getSeconds());
-    return `${month}-${day}-${hours}${minutes}${seconds}`;
-}
-
-function pad2(value: number): string {
-    return String(value).padStart(2, '0');
+function formatError(error: unknown): string {
+    return error instanceof Error ? error.message : String(error);
 }

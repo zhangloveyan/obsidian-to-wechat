@@ -23,29 +23,23 @@ export class ImageGenerationClient {
         this.settings = settings;
     }
 
-    async generateImage(prompt: string, onProgress?: (message: string) => void): Promise<GeneratedImageData> {
+    async generateImage(prompt: string, onProgress?: (message: string) => void, signal?: AbortSignal): Promise<GeneratedImageData> {
         this.validateSettings();
+        checkCancelled(signal);
 
         const prediction = await this.createPrediction(prompt);
-        const completed = await this.waitForPrediction(prediction, onProgress);
+        checkCancelled(signal);
+        const completed = await this.waitForPrediction(prediction, onProgress, signal);
         const status = String(completed.status || '');
 
         if (status !== 'completed') {
-            const detail = typeof completed.error === 'string' ? completed.error : status || '未知状态';
+            const detail = errorDetail(completed.error) || status || '未知状态';
             throw new Error(`图片生成失败：${detail}`);
         }
 
         const outputUrl = firstOutputUrl(completed);
+        checkCancelled(signal);
         return this.downloadImage(outputUrl);
-    }
-
-    async testConnection(): Promise<{ ok: boolean; message: string }> {
-        try {
-            await this.generateImage('一张白色背景的极简测试图片', () => undefined);
-            return { ok: true, message: '图片生成接口测试成功。' };
-        } catch (error) {
-            return { ok: false, message: `图片生成接口测试失败：${formatError(error)}` };
-        }
     }
 
     private validateSettings(): void {
@@ -64,6 +58,7 @@ export class ImageGenerationClient {
 
     private async createPrediction(prompt: string): Promise<ImageTaskPayload> {
         const response = await requestUrl({
+            throw: false,
             url: `${normalizeBaseUrl(this.settings.baseUrl)}/v1/images/generations`,
             method: 'POST',
             headers: {
@@ -80,7 +75,7 @@ export class ImageGenerationClient {
         });
 
         if (response.status < 200 || response.status >= 300) {
-            throw new Error(`提交图片生成任务失败，HTTP ${response.status}。`);
+            throw new Error(httpError('提交图片生成任务', response.status, response.text));
         }
 
         return extractTaskPayload(response.json);
@@ -89,12 +84,13 @@ export class ImageGenerationClient {
     private async waitForPrediction(
         prediction: ImageTaskPayload,
         onProgress?: (message: string) => void,
+        signal?: AbortSignal,
     ): Promise<ImageTaskPayload> {
         let current = prediction;
         let status = String(current.status || '');
         if (TERMINAL_STATES.has(status)) return current;
 
-        const taskId = String(current.task_id || '').trim();
+        const taskId = String(current.task_id || current.id || '').trim();
         if (!taskId) {
             throw new Error('图片生成接口返回缺少 task_id。');
         }
@@ -107,8 +103,11 @@ export class ImageGenerationClient {
         onProgress?.(`已提交任务 ${taskId}，等待生成结果。`);
 
         while (Date.now() < deadline) {
-            await sleep(pollIntervalSeconds * 1000);
+            checkCancelled(signal);
+            await sleep(Math.min(pollIntervalSeconds * 1000, Math.max(0, deadline - Date.now())), signal);
+            if (Date.now() >= deadline) break;
             current = await this.getPrediction(taskId);
+            checkCancelled(signal);
             status = String(current.status || '');
             onProgress?.(`任务 ${taskId} 状态：${status || 'unknown'}`);
 
@@ -122,6 +121,7 @@ export class ImageGenerationClient {
 
     private async getPrediction(taskId: string): Promise<ImageTaskPayload> {
         const response = await requestUrl({
+            throw: false,
             url: `${normalizeBaseUrl(this.settings.baseUrl)}/v1/tasks/${encodeURIComponent(taskId)}`,
             method: 'GET',
             headers: {
@@ -130,17 +130,22 @@ export class ImageGenerationClient {
         });
 
         if (response.status < 200 || response.status >= 300) {
-            throw new Error(`查询图片生成任务失败，HTTP ${response.status}。`);
+            throw new Error(httpError('查询图片生成任务 ' + taskId, response.status, response.text));
         }
 
         return extractTaskPayload(response.json);
     }
 
     private async downloadImage(outputUrl: string): Promise<GeneratedImageData> {
-        const response = await requestUrl({ url: outputUrl });
+        const response = await requestUrl({ url: outputUrl, throw: false });
 
         if (response.status < 200 || response.status >= 300) {
-            throw new Error(`下载生成图片失败，HTTP ${response.status}。`);
+            throw new Error(httpError('下载生成图片', response.status, response.text));
+        }
+
+        const type = response.headers['content-type'] || response.headers['Content-Type'] || '';
+        if (!type.startsWith('image/') || !response.arrayBuffer.byteLength) {
+            throw new Error('下载生成图片失败：服务返回的不是有效图片，Content-Type=' + type);
         }
 
         return {
@@ -154,16 +159,17 @@ export class ImageGenerationClient {
 function extractTaskPayload(payload: unknown): ImageTaskPayload {
     if (isRecord(payload)) {
         const data = payload.data;
-        if (Array.isArray(data) && isRecord(data[0])) return data[0] as ImageTaskPayload;
-        if (isRecord(data)) return data as ImageTaskPayload;
-        return payload as ImageTaskPayload;
+        if (Array.isArray(data) && isRecord(data[0])) return data[0];
+        if (isRecord(data)) return data;
+        return payload;
     }
 
     throw new Error('图片生成接口返回格式无法识别。');
 }
 
 function firstOutputUrl(payload: ImageTaskPayload): string {
-    const urls = findUrls(payload);
+    const result = isRecord(payload.result) ? payload.result : {};
+    const urls = findUrls(payload.output ?? result.images ?? payload.images);
     const url = urls.find(Boolean);
     if (!url) {
         throw new Error(`图片生成结果中没有可下载图片。状态：${String(payload.status || 'unknown')}`);
@@ -182,7 +188,7 @@ function findUrls(value: unknown): string[] {
     }
 
     if (isRecord(value)) {
-        return Object.values(value).flatMap(item => findUrls(item));
+        return findUrls(value.url ?? value.urls ?? value.image_url ?? []);
     }
 
     return [];
@@ -217,10 +223,38 @@ function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null;
 }
 
-function sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+    return new Promise((resolve, reject) => {
+        const abort = () => {
+            window.clearTimeout(timer);
+            signal?.removeEventListener('abort', abort);
+            reject(new Error('图片生成任务已停止。'));
+        };
+        const timer = window.setTimeout(() => {
+            signal?.removeEventListener('abort', abort);
+            resolve();
+        }, ms);
+        signal?.addEventListener('abort', abort, { once: true });
+        if (signal?.aborted) abort();
+    });
 }
 
-function formatError(error: unknown): string {
-    return error instanceof Error ? error.message : String(error || '未知错误');
+function checkCancelled(signal?: AbortSignal): void {
+    if (signal?.aborted) throw new Error('图片生成任务已停止。');
+}
+
+function errorDetail(error: unknown): string {
+    if (typeof error === 'string') return error;
+    if (isRecord(error) && typeof error.message === 'string') return error.message;
+    return '';
+}
+
+function httpError(stage: string, status: number, body: string): string {
+    let detail = '';
+    try {
+        const payload: unknown = JSON.parse(body);
+        if (isRecord(payload)) detail = errorDetail(payload.error) || errorDetail(payload.message);
+    } catch { /* Non-JSON proxy responses are identified by their HTTP status. */ }
+    const hints: Record<number, string> = { 401: '请检查 API 密钥。', 403: '请检查密钥权限、服务地区或网关限制。', 429: '请求过于频繁或额度不足。' };
+    return stage + '失败，HTTP ' + status + '。' + (hints[status] || '') + (detail ? ' 服务返回：' + detail.slice(0, 300) : '');
 }

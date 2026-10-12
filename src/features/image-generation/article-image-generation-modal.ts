@@ -1,168 +1,83 @@
 import { App, Modal, Notice, Setting, TFile, TextComponent } from 'obsidian';
-import type { SettingsManager } from '../settings/settings';
-import { ImageGenerationService } from './image-generation-service';
-import type { ImagePromptEntry } from './prompt-extractor';
-
-type TaskStatus = 'idle' | 'generating' | 'generated' | 'failed';
-
-interface ImagePromptTask {
-    entry: ImagePromptEntry;
-    promptInput: TextComponent;
-    statusEl: HTMLElement;
-    detailEl: HTMLElement;
-    actionButton: HTMLButtonElement;
-    status: TaskStatus;
-}
+import { ImageGenerationService, isBusy, type ImagePromptTask } from './image-generation-service';
 
 export class ArticleImageGenerationModal extends Modal {
-    private file: TFile;
-    private service: ImageGenerationService;
+    private alive = false;
+    private unsubscribe?: () => void;
     private tasks: ImagePromptTask[] = [];
-    private taskListEl!: HTMLElement;
-    private summaryEl!: HTMLElement;
+    private allButton!: HTMLButtonElement;
 
-    constructor(app: App, file: TFile, settingsManager: SettingsManager) {
+    constructor(app: App, private file: TFile, private service: ImageGenerationService) {
         super(app);
-        this.file = file;
-        this.service = new ImageGenerationService(app, settingsManager);
     }
 
-    async onOpen(): Promise<void> {
-        const { contentEl } = this;
+    onOpen(): void {
+        this.alive = true;
         this.modalEl.addClass('otw-image-generation-modal');
-        contentEl.empty();
-        this.tasks = [];
-
-        const heading = new Setting(contentEl)
-            .setName('图片生成')
-            .setHeading();
+        this.contentEl.empty();
+        const heading = new Setting(this.contentEl).setName('图片生成').setHeading();
         heading.settingEl.addClass('otw-modal-heading');
-
-        const headerRow = contentEl.createDiv({ cls: 'otw-image-generation-header-row' });
-        this.summaryEl = headerRow.createDiv({ cls: 'otw-image-generation-summary' });
-        this.summaryEl.setText(`当前文章：${this.file.name}`);
-        headerRow.createEl('button', { text: '全部开始生成', cls: 'otw-image-generation-all-button' })
-            .addEventListener('click', () => {
-                void this.generateAll();
-            });
-
-        this.taskListEl = contentEl.createDiv({ cls: 'otw-image-generation-task-list' });
-        await this.loadTasks();
+        const header = this.contentEl.createDiv({ cls: 'otw-image-generation-header-row' });
+        const summary = header.createDiv({ cls: 'otw-image-generation-summary', text: '当前文章：' + this.file.name });
+        this.allButton = header.createEl('button', { text: '全部开始生成', cls: 'otw-image-generation-all-button' });
+        this.allButton.disabled = true;
+        this.allButton.addEventListener('click', () => {
+            void this.run(() => this.service.generateAll(this.file, this.tasks));
+        });
+        const list = this.contentEl.createDiv({ cls: 'otw-image-generation-task-list' });
+        void this.service.getTasks(this.file).then(tasks => {
+            if (!this.alive) return;
+            this.tasks = tasks;
+            summary.setText('当前文章：' + this.file.name + '，共 ' + tasks.length + ' 条提示词');
+            if (!tasks.length) list.createDiv({ cls: 'otw-image-generation-empty', text: '未找到图片提示词。' });
+            const updateRows = tasks.map((task, index) => this.renderTask(list, task, index));
+            const update = () => {
+                updateRows.forEach(render => render());
+                this.allButton.disabled = !tasks.length || tasks.some(isBusy);
+            };
+            this.unsubscribe = this.service.subscribe(this.file, update);
+            update();
+        }).catch(error => {
+            if (this.alive) list.setText(error instanceof Error ? error.message : String(error));
+        });
     }
 
     onClose(): void {
+        this.alive = false;
+        this.unsubscribe?.();
         this.contentEl.empty();
     }
 
-    private async loadTasks(): Promise<void> {
-        this.taskListEl.empty();
-        this.tasks = [];
-
-        const entries = await this.service.getPromptEntries(this.file);
-        this.summaryEl.setText(`当前文章：${this.file.name}，共 ${entries.length} 条提示词`);
-
-        if (entries.length === 0) {
-            this.taskListEl.createDiv({
-                cls: 'otw-image-generation-empty',
-                text: '未找到图片提示词，请使用格式：<!-- image-prompt: 你的图片描述 -->',
-            });
-            return;
-        }
-
-        entries.forEach((entry, index) => this.renderTask(entry, index));
-    }
-
-    private renderTask(entry: ImagePromptEntry, index: number): void {
-        const card = this.taskListEl.createDiv({ cls: 'otw-image-generation-task' });
-        const taskLine = card.createDiv({ cls: 'otw-image-generation-task-line' });
-        taskLine.createSpan({ cls: 'otw-image-generation-task-index', text: `${index + 1}.` });
-
-        const task: Partial<ImagePromptTask> = {
-            entry,
-            status: entry.imagePath ? 'generated' : 'idle',
+    private renderTask(list: HTMLElement, task: ImagePromptTask, index: number): () => void {
+        const row = list.createDiv({ cls: 'otw-image-generation-task' });
+        const line = row.createDiv({ cls: 'otw-image-generation-task-line' });
+        line.createSpan({ cls: 'otw-image-generation-task-index', text: String(index + 1) + '.' });
+        const input = new TextComponent(line).setValue(task.prompt);
+        input.inputEl.addClass('otw-image-generation-prompt-input');
+        input.inputEl.ariaLabel = '提示词 ' + (index + 1);
+        input.onChange(value => { task.prompt = value; });
+        input.inputEl.addEventListener('change', () => {
+            void this.run(() => this.service.syncPrompt(this.file, task, input.getValue()));
+        });
+        const button = line.createEl('button', { cls: 'otw-image-generation-task-button' });
+        button.addEventListener('click', () => {
+            void this.run(() => this.service.generate(this.file, task, input.getValue()));
+        });
+        const statusLine = row.createDiv({ cls: 'otw-image-generation-status-line' });
+        const status = statusLine.createSpan({ cls: 'otw-image-generation-task-status' });
+        const detail = statusLine.createSpan({ cls: 'otw-image-generation-task-detail' });
+        return () => {
+            input.setDisabled(isBusy(task));
+            button.disabled = isBusy(task);
+            button.setText(isBusy(task) ? '生成中...' : task.status === 'failed' ? '重试' : task.imagePath ? '重新生成' : '生成');
+            const labels = { idle: '未生成', queued: '排队中', generating: '生成中', generated: '已生成', failed: '失败' };
+            status.setText('状态：' + labels[task.status]);
+            detail.setText(task.detail ? ' · ' + task.detail : '');
         };
-
-        const promptInput = new TextComponent(taskLine);
-        task.promptInput = promptInput;
-        promptInput.inputEl.addClass('otw-image-generation-prompt-input');
-        promptInput.setValue(entry.prompt);
-
-        task.actionButton = taskLine.createEl('button', {
-            text: entry.imagePath ? '重新生成' : '生成',
-            cls: 'otw-image-generation-task-button',
-        });
-        task.actionButton.addEventListener('click', () => {
-            void this.generateOne(task as ImagePromptTask);
-        });
-
-        const statusLine = card.createDiv({ cls: 'otw-image-generation-status-line' });
-        task.statusEl = statusLine.createSpan({
-            cls: 'otw-image-generation-task-status',
-            text: entry.imagePath ? '状态：已生成' : '状态：未生成',
-        });
-        task.detailEl = statusLine.createSpan({
-            cls: 'otw-image-generation-task-detail',
-            text: entry.imagePath ? ` · ${entry.imagePath}` : '',
-        });
-
-        this.tasks.push(task as ImagePromptTask);
     }
 
-    private async generateAll(): Promise<void> {
-        for (const task of this.tasks) {
-            if (task.status === 'generating') return;
-            await this.generateOne(task);
-            if (task.status === 'failed') return;
-        }
-    }
-
-    private async generateOne(task: ImagePromptTask): Promise<void> {
-        const prompt = task.promptInput.getValue().trim();
-        if (!prompt) {
-            new Notice('提示词不能为空');
-            return;
-        }
-
-        this.setTaskStatus(task, 'generating', '正在生成...');
-        task.actionButton.disabled = true;
-        task.actionButton.setText('生成中...');
-
-        try {
-            const generated = await this.service.generatePromptImage(
-                this.file,
-                task.entry.lineIndex,
-                prompt,
-                message => {
-            task.detailEl.setText(` · ${message}`);
-                },
-            );
-
-            task.entry.prompt = generated.prompt;
-            task.entry.imagePath = generated.relativePath;
-            task.status = 'generated';
-            this.setTaskStatus(task, 'generated', `图片：${generated.relativePath}`);
-            task.actionButton.setText('重新生成');
-            new Notice(`图片生成成功：${generated.relativePath}`);
-        } catch (error) {
-            const message = error instanceof Error ? error.message : String(error || '未知错误');
-            task.status = 'failed';
-            this.setTaskStatus(task, 'failed', `错误：${message}`);
-            task.actionButton.setText('重试');
-            new Notice(`图片生成失败：${message}`, 12000);
-        } finally {
-            task.actionButton.disabled = false;
-        }
-    }
-
-    private setTaskStatus(task: ImagePromptTask, status: TaskStatus, detail: string): void {
-        task.status = status;
-        const labelMap: Record<TaskStatus, string> = {
-            idle: '未生成',
-            generating: '生成中',
-            generated: '已生成',
-            failed: '失败',
-        };
-        task.statusEl.setText(`状态：${labelMap[status]}`);
-        task.detailEl.setText(detail ? ` · ${detail}` : '');
+    private async run(operation: () => Promise<void>): Promise<void> {
+        try { await operation(); }
+        catch (error) { new Notice(error instanceof Error ? error.message : String(error), 12000); }
     }
 }

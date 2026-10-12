@@ -302,7 +302,7 @@ export class PreviewView extends ItemView {
 
     private async generateArticleImages(): Promise<void> {
         if (!this.currentFile) return;
-        new ArticleImageGenerationModal(this.app, this.currentFile, this.settingsManager).open();
+        new ArticleImageGenerationModal(this.app, this.currentFile, this.plugin.imageGeneration).open();
     }
 
     private showImageProgress(title: string, detail: string, percent: number): void {

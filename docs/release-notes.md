@@ -1,15 +1,19 @@
-# 0.1.7
+# 0.1.8
 
 ## 更新内容
 
-- 新增公众号封面裁剪：选择文章图片或本地图片后，按固定 2.35:1 比例裁剪，支持拖动和缩放。
-- 裁剪结果上传为独立 PNG，不修改原图或正文；最大 2350 × 1000 像素，不放大小图。
-- 返回可保留选图状态；上传失败可重试，取消不会替换原有封面。
-- 裁剪功能完全在本地运行，不依赖 CDN；保持现有的 10MB 图片限制。
+- 统一主题编辑、文章预览、复制和发布的渲染流程，修复样式不一致，并隔离 Obsidian 主题样式的影响。
+- 内置主题只读，可复制为自定义主题后编辑；调整主题后自动更新预览。
+- 图片生成任务在关闭弹窗后继续运行，重新打开可查看进度；写回图片前检查文章变化，避免覆盖编辑内容。
+- 隔离多公众号的发布状态、封面和图片缓存，完善图片格式处理及错误提示，保留 10MB 图片限制。
+- 封面裁剪打开时自动适配图片，减少手动缩放；插件入口改用公众号风格图标。
+- 修复社区审核指出的 DOM 和样式写入问题，补全许可证、清理依赖，并加入发布前自动化检查。
 
 ## What's new
 
-- Crop article or local images into a 2.35:1 WeChat cover with drag and zoom controls.
-- Upload the crop as a separate PNG, up to 2350 × 1000 pixels without upscaling or changing the original image or note.
-- Keep the selected image when going back, retry failed uploads, and preserve the previous cover when cancelling.
-- Cropping runs locally without a CDN. The existing 10MB image limit is unchanged.
+- Use one rendering pipeline for the theme editor, article preview, clipboard export, and publishing, isolated from Obsidian theme styles.
+- Keep built-in themes read-only, with editable custom copies and automatic preview updates.
+- Continue image generation after closing the dialog, restore progress when reopening, and detect note edits before inserting images to prevent overwrites.
+- Isolate publishing state, covers, and image caches by account; improve image format handling and error messages while retaining the 10MB limit.
+- Fit cover images automatically when opening the crop dialog and use an Official Account-style plugin icon.
+- Address DOM and style-write issues reported by community review, complete the license, clean up dependencies, and add automated release checks.

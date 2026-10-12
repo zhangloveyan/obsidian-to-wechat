@@ -91,13 +91,19 @@ export class CoverCropModal extends Modal {
                             const scale = Math.max(width / prepared.width, height / prepared.height);
                             this.cropper.setCanvasData({ width: prepared.width * scale, height: prepared.height * scale,
                                 left: (bounds.width - prepared.width * scale) / 2, top: (bounds.height - prepared.height * scale) / 2 });
-                            this.cropper.setCropBoxData({ width, height, left: (bounds.width - width) / 2, top: (bounds.height - height) / 2 });
-                            if (previous) {
-                                const restoredScale = width / previous.width;
-                                this.cropper.setCanvasData({ width: prepared.width * restoredScale, height: prepared.height * restoredScale,
-                                    left: (bounds.width - width) / 2 - previous.x * restoredScale,
-                                    top: (bounds.height - height) / 2 - previous.y * restoredScale });
-                            }
+                            // Finalize sizes before positions; Cropper can clamp a size and restore its old position.
+                            this.cropper.setCropBoxData({ width, height });
+                            const box = this.cropper.getCropBoxData();
+                            const left = (bounds.width - box.width) / 2;
+                            const top = (bounds.height - box.height) / 2;
+                            this.cropper.setCropBoxData({ left, top });
+                            const finalScale = previous ? box.width / previous.width : minimumRatio();
+                            this.cropper.setCanvasData({ width: prepared.width * finalScale });
+                            const canvas = this.cropper.getCanvasData();
+                            const actualScale = canvas.width / prepared.width;
+                            this.cropper.setCanvasData({
+                                left: previous ? left - previous.x * actualScale : (bounds.width - canvas.width) / 2,
+                                top: previous ? top - previous.y * actualScale : (bounds.height - canvas.height) / 2 });
                             ready = true;
                             slider.disabled = false;
                             apply.disabled = false;

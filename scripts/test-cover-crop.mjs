@@ -227,6 +227,51 @@ try {
     await page.addStyleTag({ content: appCss + css });
     await page.addScriptTag({ content: bundle.outputFiles[0].text });
 
+    await check('initial crop: centered minimum zoom for all image and viewport ratios', async () => {
+        for (const viewport of [{ width: 1100, height: 850 }, { width: 390, height: 720 }, { width: 1100, height: 480 }]) {
+            await page.setViewportSize(viewport);
+            await page.evaluate(dark => document.body.classList.toggle('dark', dark), viewport.width === 390);
+            for (const [width, height] of [[1200, 800], [1600, 900], [800, 800], [600, 1400], [3000, 600], [2350, 1000]]) {
+                await fixture(width, height); await openCrop();
+                const initial = await page.evaluate(() => {
+                    const image = crop.cropper.getImageData();
+                    const canvas = crop.cropper.getCanvasData();
+                    const box = crop.cropper.getCropBoxData();
+                    const container = crop.cropper.getContainerData();
+                    const minimum = Math.max(box.width / image.naturalWidth, box.height / image.naturalHeight);
+                    return { canvas, box, container, ratio: image.width / image.naturalWidth / minimum,
+                        data: crop.cropper.getData(), zoomText: document.querySelector('input[type=range]').getAttribute('aria-valuetext') };
+                });
+                const label = `${width}x${height} in ${viewport.width}x${viewport.height}`;
+                assert.ok(Math.abs(initial.ratio - 1) < 0.0001, `${label}: initial zoom is ${initial.ratio}, expected minimum`);
+                assert.equal(await page.getByRole('slider').inputValue(), '1', label);
+                assert.equal(initial.zoomText, '100%', label);
+                assert.ok(await page.getByRole('button', { name: '缩小图片', exact: true }).isDisabled(), label);
+                for (const element of [initial.canvas, initial.box]) {
+                    assert.ok(Math.abs(element.left + element.width / 2 - initial.container.width / 2) < 0.1, `${label}: horizontally centered ${JSON.stringify(element)}`);
+                    assert.ok(Math.abs(element.top + element.height / 2 - initial.container.height / 2) < 0.1, `${label}: vertically centered`);
+                }
+                if (width / height <= 2.35) {
+                    assert.ok(Math.abs(initial.canvas.width - initial.box.width) < 0.1, `${label}: fit width`);
+                } else {
+                    assert.ok(Math.abs(initial.canvas.height - initial.box.height) < 0.1, `${label}: fit height`);
+                }
+                if (height === 1400 || width === 3000) await screenshot(`initial-${width}x${height}-${viewport.width}x${viewport.height}`);
+                await page.getByRole('slider').fill('2');
+                await page.getByRole('slider').fill('1');
+                const minimum = await page.evaluate(() => crop.cropper.getData());
+                for (const key of ['width', 'height']) {
+                    assert.ok(Math.abs(minimum[key] - initial.data[key]) < 0.1, `${label}: initial crop matches manual minimum (${key})`);
+                }
+                await apply();
+                assert.ok((await outputInfo()).pixels.every(pixel => pixel[3] === 255), `${label}: no empty crop edges`);
+                await closeAll();
+            }
+        }
+        await page.setViewportSize({ width: 1100, height: 850 });
+        await page.evaluate(() => document.body.classList.remove('dark'));
+    });
+
     await check('landscape PNG: exact ratio, independent bytes, matching preview', async () => {
         await fixture(); await openCrop(); await screenshot('desktop-light'); await apply();
         const result = await outputInfo();

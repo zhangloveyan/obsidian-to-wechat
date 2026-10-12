@@ -76,6 +76,14 @@ src/
 - `npm audit --audit-level=high`：0 vulnerabilities。移除未使用依赖、补齐 AGPL 许可全文，JS/CSS 均支持构建与开发监听。
 - 标准排版结果在复制和发布时只替换图片资源；标题首段间距、连续行空格、代码行号、列表编号、主题装饰及过期渲染均纳入回归。
 - 已复制三个发布文件到 `E:\person\gzh\.obsidian\plugins\markdown-wechat-publisher`，逐个校验 SHA-256；`data.json` 未改变。
-- 当前版本仍为 0.1.7。未推送 GitHub、未创建 Release、未触发市场复审。
+- 本地重构验收时版本为 0.1.7，尚未推送或复审；后续发布结果见下方记录。
 
 验证边界：浏览器测试替换了 Obsidian 宿主与网络接口，未实际消耗生图额度、未向真实公众号创建草稿；也未验证真实移动端 Obsidian。发布前集中验证一次真实文章的预览、复制、封面与草稿效果，再发布新版本并查看市场扫描结果。源码本地检查通过不等于线上审核已经通过。
+
+## 0.1.8 发布复审记录（2026-10-12）
+
+- 按用户指令升级并发布 [0.1.8](https://github.com/zhangloveyan/obsidian-to-wechat/releases/tag/0.1.8)，tag 对应 `c7199fb`。先发布同名正式 Release、核验附件，再推送 main，未改写历史或创建新 PR。
+- 本地 `npm ci`、`npm run check`、`npm audit --audit-level=high` 通过；GitHub Release 和主分支检查通过。Release 的 JS/CSS 与本地构建 SHA-256 一致，manifest 内容和版本一致。
+- [Obsidian 管理页](https://community.obsidian.md/account/plugins/markdown-wechat-publisher) 复审为 **Completed**，对应版本 0.1.8、提交 c7199fb；无 Error，当前版本已更新为 0.1.8。依赖检查通过，官方构建复现确认 main.js 字节级一致。
+- 仍有非阻断 Warning：main.js 为 6,323,802 字节，超过 Obsidian Sync Standard 的 5MB 单文件限制，主要来自内置测试图片；许可证和中文 README 未被扫描器识别；CSS 的 `!important`、`text-indent` 兼容性及设置搜索接口建议。另有产物来源证明和文件枚举权限提示，未申请 skip。
+- 三个正式发布附件已复制到 `E:\person\gzh\.obsidian\plugins\markdown-wechat-publisher` 并校验哈希，未修改 data.json。此次未新增真实公众号或付费生图测试；市场自动审核通过不代表这些业务场景已重新人工验收。

@@ -75,6 +75,8 @@ Configure the image generation API URL, API key, model, aspect ratio, resolution
 4. Generate article images when the note contains `image-prompt` comments.
 5. Copy the rendered content to the WeChat editor, or publish it to the WeChat draft box.
 
+When publishing, choose an article image or a local image as the cover, then drag and zoom to crop it at a fixed 2.35:1 ratio. Applying the crop uploads the cover without changing the original image or note.
+
 ## Screenshots
 
 ![Plugin preview](pic/README/image-20260624125418855.png)

@@ -1,131 +1,31 @@
-import { requestUrl } from 'obsidian';
-import type { Logger } from '../../shared/logger';
 import type { WechatApiClient } from './wechat-api-client';
+import type { UploadedImage } from '../obsidian/image-cache';
+import { detectMime } from '../obsidian/image-assets';
 
-export interface UploadResult {
-    url: string;
-    media_id: string;
-}
-
-export interface UploadFailure {
-    errcode?: number;
-    errmsg?: string;
-    message: string;
-}
-
-export type ImageUploadResult =
-    | { ok: true; url: string; media_id: string }
-    | ({ ok: false } & UploadFailure);
-
-/**
- * Handles image upload to WeChat material library.
- */
 export class WechatImageUploader {
-    private apiClient: WechatApiClient;
-    private logger: Logger;
+    constructor(private client: WechatApiClient) {}
 
-    constructor(apiClient: WechatApiClient, logger: Logger) {
-        this.apiClient = apiClient;
-        this.logger = logger;
-    }
-
-    /** Upload an image and get media_id + url */
-    async upload(imageData: ArrayBuffer, fileName: string): Promise<ImageUploadResult> {
-        const mime = this.getMimeType(fileName);
-        const validationError = this.validateImage(fileName, imageData.byteLength, mime);
-        if (validationError) return { ok: false, message: validationError };
-
-        const boundary = '----WebKitFormBoundary' + Math.random().toString(16).substring(2);
-
-        const formDataHeader = `--${boundary}\r\nContent-Disposition: form-data; name="media"; filename="${fileName}"\r\nContent-Type: ${mime}\r\n\r\n`;
-        const formDataFooter = `\r\n--${boundary}--`;
-
-        const headerArray = new TextEncoder().encode(formDataHeader);
-        const footerArray = new TextEncoder().encode(formDataFooter);
-
-        const combinedBuffer = new Uint8Array(headerArray.length + imageData.byteLength + footerArray.length);
-        combinedBuffer.set(headerArray, 0);
-        combinedBuffer.set(new Uint8Array(imageData), headerArray.length);
-        combinedBuffer.set(footerArray, headerArray.length + imageData.byteLength);
-
-        let response;
-        try {
-            response = await this.apiClient.requestWithTokenRetry(async (token) => {
-                return requestUrl({
-                    url: `https://api.weixin.qq.com/cgi-bin/material/add_material?access_token=${token}&type=image`,
-                    method: 'POST',
-                    headers: { 'Content-Type': `multipart/form-data; boundary=${boundary}` },
-                    body: combinedBuffer.buffer,
-                });
-            });
-        } catch (error) {
-            const detail = error instanceof Error ? error.message : String(error);
-            return { ok: false, message: `网络请求失败：${detail}` };
+    async upload(data: ArrayBuffer, originalName: string): Promise<UploadedImage> {
+        if (!data.byteLength) throw new Error('上传图片失败：文件为空。');
+        if (data.byteLength > 10 * 1024 * 1024) throw new Error('上传图片失败：图片超过 10MB，请压缩后重试。');
+        const mime = detectMime(data);
+        const extensions: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/bmp': 'bmp' };
+        if (!extensions[mime]) throw new Error('上传图片失败：格式不支持或文件已损坏，请转换为 PNG/JPEG/GIF/BMP。');
+        const stem = (originalName.split(/[\\/]/).pop() || 'image').replace(/\.[^.]*$/, '').replace(/[\r\n"]/g, '_');
+        const name = stem + '.' + extensions[mime];
+        const boundary = '----otw-' + crypto.randomUUID();
+        const header = new TextEncoder().encode('--' + boundary + '\r\nContent-Disposition: form-data; name="media"; filename="' + name + '"\r\nContent-Type: ' + mime + '\r\n\r\n');
+        const footer = new TextEncoder().encode('\r\n--' + boundary + '--\r\n');
+        const body = new Uint8Array(header.length + data.byteLength + footer.length);
+        body.set(header);
+        body.set(new Uint8Array(data), header.length);
+        body.set(footer, header.length + data.byteLength);
+        const result = await this.client.request('/cgi-bin/material/add_material?type=image', {
+            method: 'POST', headers: { 'Content-Type': 'multipart/form-data; boundary=' + boundary }, body: body.buffer,
+        }, '上传图片 ' + name);
+        if (typeof result.url !== 'string' || !/^https?:\/\//i.test(result.url) || typeof result.media_id !== 'string' || !result.media_id) {
+            throw new Error('上传图片失败：微信响应缺少 url 或 media_id。');
         }
-
-        if (!response) {
-            const tokenError = this.apiClient.getLastTokenErrorMessage();
-            return {
-                ok: false,
-                message: tokenError || '微信接口无响应，可能是网络、IP 白名单或 access token 获取失败。',
-            };
-        }
-
-        if (response.json?.errcode && response.json.errcode !== 0) {
-            this.logger.error('Upload failed:', response.json);
-            return {
-                ok: false,
-                errcode: response.json.errcode,
-                errmsg: response.json.errmsg,
-                message: this.apiClient.getErrorMessage(response.json),
-            };
-        }
-
-        if (!response.json?.url || !response.json?.media_id) {
-            return {
-                ok: false,
-                message: `微信上传接口返回异常：${JSON.stringify(response.json || {})}`,
-            };
-        }
-
-        return {
-            ok: true,
-            url: response.json.url,
-            media_id: response.json.media_id,
-        };
-    }
-
-    private getMimeType(fileName: string): string {
-        const ext = fileName.split('.').pop()?.toLowerCase() || '';
-        const types: Record<string, string> = {
-            png: 'image/png',
-            jpg: 'image/jpeg',
-            jpeg: 'image/jpeg',
-            gif: 'image/gif',
-            webp: 'image/webp',
-            svg: 'image/svg+xml',
-            bmp: 'image/bmp',
-        };
-        return types[ext] || 'image/jpeg';
-    }
-
-    private validateImage(fileName: string, byteLength: number, mime: string): string | null {
-        const ext = fileName.split('.').pop()?.toLowerCase() || '';
-        const supported = ['bmp', 'png', 'jpeg', 'jpg', 'gif'];
-        if (!supported.includes(ext)) {
-            return `图片格式不支持：${fileName}。微信公众号永久图片素材通常支持 bmp/png/jpeg/jpg/gif，请转换格式后重试。`;
-        }
-
-        const maxBytes = 10 * 1024 * 1024;
-        if (byteLength > maxBytes) {
-            const sizeMb = (byteLength / 1024 / 1024).toFixed(2);
-            return `图片过大：${fileName} (${sizeMb}MB)。当前插件限制为 10MB 以内，请压缩后重试。`;
-        }
-
-        if (!mime.startsWith('image/')) {
-            return `文件不是图片类型：${fileName}`;
-        }
-
-        return null;
+        return { url: result.url, media_id: result.media_id };
     }
 }

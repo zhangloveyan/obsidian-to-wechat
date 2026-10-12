@@ -1,0 +1,31 @@
+.otw-content-section { display: block; margin: 0; padding: 0; width: 100%; box-sizing: border-box; color: #000; background: #fcfcfc; font: 16px/1.8 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; text-align: left; text-indent: 0; letter-spacing: 0; overflow-wrap: break-word; }
+.otw-content-section * { box-sizing: border-box; }
+.otw-content-section h1, .otw-content-section h2, .otw-content-section h3, .otw-content-section h4, .otw-content-section h5, .otw-content-section h6 { display: block; padding: 0; border: 0; font-family: inherit; text-transform: none; letter-spacing: 0; color: inherit; }
+.otw-content-section p { display: block; padding: 0; text-indent: 0; }
+.otw-content-section img { max-width: 100%; height: auto; }
+.otw-content-section .otw-list-section { display: block; padding: 0; margin: 1em 0 0; }
+.otw-content-section .otw-list-nested { margin: 0; padding-left: 1em; }
+.otw-content-section .otw-list-item { display: block; margin: 0; padding: 0; line-height: inherit; }
+.otw-content-section .otw-list-marker { display: inline; margin-right: .25em; }
+.otw-content-section .otw-list-content { display: inline; }
+.otw-content-section .otw-list-content > p { display: inline; margin: 0; padding: 0; line-height: inherit; }
+.otw-content-section .otw-callout { display: block; border-left: 4px solid; border-radius: 6px; padding: 12px 16px; margin: 1em 0; }
+.otw-content-section .otw-callout-title { display: block; margin-bottom: 8px; font-weight: bold; font-size: 1em; line-height: 1.5; }
+.otw-content-section .otw-callout-content { color: #4a4a4a; font-size: .95em; line-height: 1.7; }
+.otw-content-section .otw-callout-content p { margin: 4px 0; padding: 0; line-height: inherit; }
+.otw-content-section .otw-code-block { display: block; position: relative; color: #24292f; background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 8px; padding: 0; overflow: hidden; margin: 1.5em 0; text-align: left; word-spacing: 0; letter-spacing: 0; font: 14px/1.75 Menlo, Monaco, Consolas, "Courier New", monospace; }
+.otw-content-section .otw-code-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; margin: 0; border-bottom: 1px solid #d8dee4; }
+.otw-content-section .otw-code-dots { display: inline-flex; gap: 6px; }
+.otw-content-section .otw-code-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
+.otw-content-section .otw-code-language { font: 12px/1 sans-serif; color: #57606a; }
+.otw-content-section .otw-code-body { display: flex; width: 100%; padding: 0; margin: 0; background: transparent; color: inherit; font: inherit; line-height: 1.75; white-space: nowrap; text-indent: 0; }
+.otw-content-section .otw-line-numbers { display: block; flex: 0 0 auto; padding: 10px 10px 12px; border-right: 1px solid #eee; color: #8c959f; user-select: none; }
+.otw-content-section .otw-line-numbers > span { display: block; text-align: right; line-height: 1.75; }
+.otw-content-section .otw-code-scroll { display: block; flex: 1 1 auto; min-width: 0; padding: 10px 14px 12px 12px; overflow-x: auto; }
+.otw-content-section .otw-code-text { display: inline-block; min-width: max-content; white-space: pre; line-height: 1.75; }
+.otw-content-section .otw-math-inline { display: inline; width: auto; height: 18px; max-height: 20px; margin: 0; padding: 0; vertical-align: -2px; border: 0; border-radius: 0; }
+.otw-content-section .otw-math-block, .otw-content-section .otw-diagram { display: block; max-width: 100%; margin: 1em auto; border: 0; border-radius: 0; }
+.otw-content-section table { border-collapse: collapse; max-width: 100%; }
+.otw-content-section th, .otw-content-section td { padding: 8px; }
+.otw-content-section mark { color: inherit; background: #fff3a3; }
+.otw-content-section blockquote { margin-left: 0; margin-right: 0; }

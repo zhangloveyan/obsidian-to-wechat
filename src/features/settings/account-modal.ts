@@ -1,6 +1,7 @@
 import { App, Modal, Notice, Setting, TextComponent } from 'obsidian';
 import type { WechatAccount } from './settings';
 import type WechatPublisherPlugin from '../../plugin';
+import { errorMessage } from '../../shared/errors';
 
 export class AccountModal extends Modal {
     plugin: WechatPublisherPlugin;
@@ -35,42 +36,39 @@ export class AccountModal extends Modal {
 
         new Setting(contentEl)
             .setName('App ID')
-            .setDesc('微信公众号的 App ID')
+            .setDesc('微信公众号的开发者标识')
             .addText(text => {
                 this.appIdInput = text;
-                text.setPlaceholder('输入 App ID').setValue(this.account?.appId || '');
+                text.setPlaceholder('输入开发者标识').setValue(this.account?.appId || '');
             });
 
         new Setting(contentEl)
             .setName('App secret')
-            .setDesc('微信公众号的 App secret')
+            .setDesc('微信公众号的开发者密钥')
             .addText(text => {
                 this.appSecretInput = text;
-                text.setPlaceholder('输入 App secret').setValue(this.account?.appSecret || '');
+                text.inputEl.type = 'password';
+                text.setPlaceholder('输入开发者密钥').setValue(this.account?.appSecret || '');
             });
 
         new Setting(contentEl)
             .setName('连接测试')
-            .setDesc('使用当前填写的 App ID 和 App secret 测试微信 Token 获取，验证 IP 白名单是否配置正确')
+            .setDesc('使用当前填写的账号凭据测试连接，验证密钥和 IP 白名单')
             .addButton(btn => {
                 btn.setButtonText('测试连接').onClick(() => {
                     void (async () => {
                     const appId = this.appIdInput.getValue().trim();
                     const appSecret = this.appSecretInput.getValue().trim();
                     if (!appId || !appSecret) {
-                        new Notice('请先填写 App ID 和 App secret');
+                        new Notice('请先填写开发者标识和密钥');
                         return;
                     }
                     btn.setButtonText('测试中…').setDisabled(true);
                     try {
                         const result = await this.plugin.wechatPublisher.testConnection(appId, appSecret);
-                        if (result.ok) {
-                            new Notice(result.message);
-                        } else {
-                            new Notice(result.message);
-                        }
+                        new Notice(result.message, result.ok ? 5000 : 10000);
                     } catch (error: unknown) {
-                        new Notice('连接测试异常：' + (error instanceof Error ? error.message : '未知错误'));
+                        new Notice('连接测试异常：' + errorMessage(error), 10000);
                     } finally {
                         btn.setButtonText('测试连接').setDisabled(false);
                     }
@@ -89,15 +87,16 @@ export class AccountModal extends Modal {
                     const appId = this.appIdInput.getValue().trim();
                     const appSecret = this.appSecretInput.getValue().trim();
                     if (!name) { new Notice('请输入名称'); return; }
-                    if (!appId) { new Notice('请输入 App ID'); return; }
-                    if (!appSecret) { new Notice('请输入 App secret'); return; }
+                    if (!appId) { new Notice('请输入开发者标识'); return; }
+                    if (!appSecret) { new Notice('请输入开发者密钥'); return; }
 
-                    if (this.account) {
-                        await this.onSave({ ...this.account, name, appId, appSecret });
-                    } else {
-                        await this.onSave({ id: `account_${Date.now()}`, name, appId, appSecret });
-                    }
-                    this.close();
+                    btn.setDisabled(true);
+                    try {
+                        await this.onSave({ id: this.account?.id || 'account_' + crypto.randomUUID(), name, appId, appSecret });
+                        this.close();
+                    } catch (error) {
+                        new Notice('保存公众号配置失败：' + errorMessage(error), 10000);
+                    } finally { btn.setDisabled(false); }
                     })();
                 }));
     }

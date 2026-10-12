@@ -2,10 +2,12 @@ import { App, Modal, Notice, Setting } from 'obsidian';
 import type { WechatAccount } from './settings';
 import { AccountModal } from './account-modal';
 import type WechatPublisherPlugin from '../../plugin';
+import { errorMessage } from '../../shared/errors';
 
 export class AccountManagerModal extends Modal {
     private plugin: WechatPublisherPlugin;
     private onChanged: () => void;
+    private alive = false;
 
     constructor(app: App, plugin: WechatPublisherPlugin, onChanged: () => void) {
         super(app);
@@ -14,14 +16,17 @@ export class AccountManagerModal extends Modal {
     }
 
     onOpen(): void {
+        this.alive = true;
         this.render();
     }
 
     onClose(): void {
+        this.alive = false;
         this.contentEl.empty();
     }
 
     private render(): void {
+        if (!this.alive) return;
         const { contentEl } = this;
         const settings = this.plugin.settingsManager.getSettings();
         const accounts = settings.wechatAccounts;
@@ -78,7 +83,7 @@ export class AccountManagerModal extends Modal {
                     new Notice(`已设为默认公众号：${account.name}`);
                     this.onChanged();
                     this.render();
-                })();
+                })().catch(error => { new Notice('设置默认公众号失败：' + errorMessage(error), 10000); });
             });
         }
 
@@ -88,7 +93,7 @@ export class AccountManagerModal extends Modal {
             void this.testAccount(account, button);
         });
         actionsEl.createEl('button', { text: '删除' }).addEventListener('click', () => {
-            void this.deleteAccount(account);
+            void this.deleteAccount(account).catch(error => { new Notice('删除公众号失败：' + errorMessage(error), 10000); });
         });
     }
 
@@ -114,7 +119,7 @@ export class AccountManagerModal extends Modal {
             const result = await this.plugin.wechatPublisher.testConnection(account.appId, account.appSecret);
             new Notice(`${account.name}：${result.message}`, result.ok ? 5000 : 10000);
         } catch (error) {
-            const message = error instanceof Error ? error.message : String(error || '未知错误');
+            const message = errorMessage(error);
             new Notice(`${account.name}：测试异常 — ${message}`, 10000);
         } finally {
             button.textContent = '测试';

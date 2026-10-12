@@ -20,3 +20,12 @@
     color: var(--text-muted);
     font-size: 16px;
 }
+
+.otw-render-stage {
+    position: fixed;
+    left: -10000px;
+    top: 0;
+    width: 750px;
+    pointer-events: none;
+    opacity: 0;
+}

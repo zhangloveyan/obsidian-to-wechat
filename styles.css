@@ -8,33 +8,30 @@
  *
  * Date: 2024-04-21T07:43:02.731Z
  */
-
 .cropper-container {
   direction: ltr;
   font-size: 0;
   line-height: 0;
   position: relative;
   -ms-touch-action: none;
-      touch-action: none;
+  touch-action: none;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
-     -moz-user-select: none;
-      -ms-user-select: none;
-          user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
-
 .cropper-container img {
-    backface-visibility: hidden;
-    display: block;
-    height: 100%;
-    image-orientation: 0deg;
-    max-height: none !important;
-    max-width: none !important;
-    min-height: 0 !important;
-    min-width: 0 !important;
-    width: 100%;
-  }
-
+  backface-visibility: hidden;
+  display: block;
+  height: 100%;
+  image-orientation: 0deg;
+  max-height: none !important;
+  max-width: none !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  width: 100%;
+}
 .cropper-wrap-box,
 .cropper-canvas,
 .cropper-drag-box,
@@ -46,22 +43,18 @@
   right: 0;
   top: 0;
 }
-
 .cropper-wrap-box,
 .cropper-canvas {
   overflow: hidden;
 }
-
 .cropper-drag-box {
   background-color: #fff;
   opacity: 0;
 }
-
 .cropper-modal {
   background-color: #000;
   opacity: 0.5;
 }
-
 .cropper-view-box {
   display: block;
   height: 100%;
@@ -70,32 +63,28 @@
   overflow: hidden;
   width: 100%;
 }
-
 .cropper-dashed {
   border: 0 dashed #eee;
   display: block;
   opacity: 0.5;
   position: absolute;
 }
-
 .cropper-dashed.dashed-h {
-    border-bottom-width: 1px;
-    border-top-width: 1px;
-    height: calc(100% / 3);
-    left: 0;
-    top: calc(100% / 3);
-    width: 100%;
-  }
-
+  border-bottom-width: 1px;
+  border-top-width: 1px;
+  height: calc(100% / 3);
+  left: 0;
+  top: calc(100% / 3);
+  width: 100%;
+}
 .cropper-dashed.dashed-v {
-    border-left-width: 1px;
-    border-right-width: 1px;
-    height: 100%;
-    left: calc(100% / 3);
-    top: 0;
-    width: calc(100% / 3);
-  }
-
+  border-left-width: 1px;
+  border-right-width: 1px;
+  height: 100%;
+  left: calc(100% / 3);
+  top: 0;
+  width: calc(100% / 3);
+}
 .cropper-center {
   display: block;
   height: 0;
@@ -105,29 +94,25 @@
   top: 50%;
   width: 0;
 }
-
 .cropper-center::before,
-  .cropper-center::after {
-    background-color: #eee;
-    content: ' ';
-    display: block;
-    position: absolute;
-  }
-
-.cropper-center::before {
-    height: 1px;
-    left: -3px;
-    top: 0;
-    width: 7px;
-  }
-
 .cropper-center::after {
-    height: 7px;
-    left: 0;
-    top: -3px;
-    width: 1px;
-  }
-
+  background-color: #eee;
+  content: " ";
+  display: block;
+  position: absolute;
+}
+.cropper-center::before {
+  height: 1px;
+  left: -3px;
+  top: 0;
+  width: 7px;
+}
+.cropper-center::after {
+  height: 7px;
+  left: 0;
+  top: -3px;
+  width: 1px;
+}
 .cropper-face,
 .cropper-line,
 .cropper-point {
@@ -137,171 +122,142 @@
   position: absolute;
   width: 100%;
 }
-
 .cropper-face {
   background-color: #fff;
   left: 0;
   top: 0;
 }
-
 .cropper-line {
   background-color: #39f;
 }
-
 .cropper-line.line-e {
-    cursor: ew-resize;
-    right: -3px;
-    top: 0;
-    width: 5px;
-  }
-
+  cursor: ew-resize;
+  right: -3px;
+  top: 0;
+  width: 5px;
+}
 .cropper-line.line-n {
-    cursor: ns-resize;
-    height: 5px;
-    left: 0;
-    top: -3px;
-  }
-
+  cursor: ns-resize;
+  height: 5px;
+  left: 0;
+  top: -3px;
+}
 .cropper-line.line-w {
-    cursor: ew-resize;
-    left: -3px;
-    top: 0;
-    width: 5px;
-  }
-
+  cursor: ew-resize;
+  left: -3px;
+  top: 0;
+  width: 5px;
+}
 .cropper-line.line-s {
-    bottom: -3px;
-    cursor: ns-resize;
-    height: 5px;
-    left: 0;
-  }
-
+  bottom: -3px;
+  cursor: ns-resize;
+  height: 5px;
+  left: 0;
+}
 .cropper-point {
   background-color: #39f;
   height: 5px;
   opacity: 0.75;
   width: 5px;
 }
-
 .cropper-point.point-e {
-    cursor: ew-resize;
-    margin-top: -3px;
-    right: -3px;
-    top: 50%;
-  }
-
+  cursor: ew-resize;
+  margin-top: -3px;
+  right: -3px;
+  top: 50%;
+}
 .cropper-point.point-n {
-    cursor: ns-resize;
-    left: 50%;
-    margin-left: -3px;
-    top: -3px;
-  }
-
+  cursor: ns-resize;
+  left: 50%;
+  margin-left: -3px;
+  top: -3px;
+}
 .cropper-point.point-w {
-    cursor: ew-resize;
-    left: -3px;
-    margin-top: -3px;
-    top: 50%;
-  }
-
+  cursor: ew-resize;
+  left: -3px;
+  margin-top: -3px;
+  top: 50%;
+}
 .cropper-point.point-s {
-    bottom: -3px;
-    cursor: s-resize;
-    left: 50%;
-    margin-left: -3px;
-  }
-
+  bottom: -3px;
+  cursor: s-resize;
+  left: 50%;
+  margin-left: -3px;
+}
 .cropper-point.point-ne {
-    cursor: nesw-resize;
-    right: -3px;
-    top: -3px;
-  }
-
+  cursor: nesw-resize;
+  right: -3px;
+  top: -3px;
+}
 .cropper-point.point-nw {
-    cursor: nwse-resize;
-    left: -3px;
-    top: -3px;
-  }
-
+  cursor: nwse-resize;
+  left: -3px;
+  top: -3px;
+}
 .cropper-point.point-sw {
-    bottom: -3px;
-    cursor: nesw-resize;
-    left: -3px;
-  }
-
+  bottom: -3px;
+  cursor: nesw-resize;
+  left: -3px;
+}
 .cropper-point.point-se {
-    bottom: -3px;
-    cursor: nwse-resize;
-    height: 20px;
-    opacity: 1;
-    right: -3px;
-    width: 20px;
-  }
-
+  bottom: -3px;
+  cursor: nwse-resize;
+  height: 20px;
+  opacity: 1;
+  right: -3px;
+  width: 20px;
+}
 @media (min-width: 768px) {
-
-.cropper-point.point-se {
-      height: 15px;
-      width: 15px;
+  .cropper-point.point-se {
+    height: 15px;
+    width: 15px;
   }
-    }
-
+}
 @media (min-width: 992px) {
-
-.cropper-point.point-se {
-      height: 10px;
-      width: 10px;
+  .cropper-point.point-se {
+    height: 10px;
+    width: 10px;
   }
-    }
-
+}
 @media (min-width: 1200px) {
-
-.cropper-point.point-se {
-      height: 5px;
-      opacity: 0.75;
-      width: 5px;
+  .cropper-point.point-se {
+    height: 5px;
+    opacity: 0.75;
+    width: 5px;
   }
-    }
-
+}
 .cropper-point.point-se::before {
-    background-color: #39f;
-    bottom: -50%;
-    content: ' ';
-    display: block;
-    height: 200%;
-    opacity: 0;
-    position: absolute;
-    right: -50%;
-    width: 200%;
-  }
-
+  background-color: #39f;
+  bottom: -50%;
+  content: " ";
+  display: block;
+  height: 200%;
+  opacity: 0;
+  position: absolute;
+  right: -50%;
+  width: 200%;
+}
 .cropper-invisible {
   opacity: 0;
 }
-
 .cropper-bg {
-  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAAA3NCSVQICAjb4U/gAAAABlBMVEXMzMz////TjRV2AAAACXBIWXMAAArrAAAK6wGCiw1aAAAAHHRFWHRTb2Z0d2FyZQBBZG9iZSBGaXJld29ya3MgQ1M26LyyjAAAABFJREFUCJlj+M/AgBVhF/0PAH6/D/HkDxOGAAAAAElFTkSuQmCC');
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAAA3NCSVQICAjb4U/gAAAABlBMVEXMzMz////TjRV2AAAACXBIWXMAAArrAAAK6wGCiw1aAAAAHHRFWHRTb2Z0d2FyZQBBZG9iZSBGaXJld29ya3MgQ1M26LyyjAAAABFJREFUCJlj+M/AgBVhF/0PAH6/D/HkDxOGAAAAAElFTkSuQmCC);
 }
-
 .cropper-hide {
   display: block;
   height: 0;
   position: absolute;
   width: 0;
 }
-
 .cropper-hidden {
   display: none !important;
 }
-
 .cropper-move {
   cursor: move;
 }
-
 .cropper-crop {
   cursor: crosshair;
 }
-
 .cropper-disabled .cropper-drag-box,
 .cropper-disabled .cropper-face,
 .cropper-disabled .cropper-line,
@@ -310,1303 +266,1001 @@
 }
 
 /* src/styles/view/layout.css */
-/* ===== 基础布局 ===== */
-.otw-view-content {
-    display: flex !important;
-    flex-direction: column !important;
-    height: 100% !important;
-    overflow: hidden !important;
-    padding: 0 !important;
+.view-content.otw-view-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0;
 }
-
-/* ===== 工具栏 ===== */
 .otw-toolbar {
-    padding: 8px 10px !important;
-    flex-shrink: 0 !important;
-    background: var(--background-secondary);
-    border-bottom: 1px solid var(--background-modifier-border);
+  padding: 8px 10px;
+  flex-shrink: 0;
+  background: var(--background-secondary);
+  border-bottom: 1px solid var(--background-modifier-border);
 }
-
-/* ===== 预览区域 ===== */
-/* .otw-preview-area 定义在 preview.css 中 */
-
-/* 控件组布局 */
 .otw-controls-group {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    width: 100%;
-    justify-content: flex-start;
-    flex-wrap: nowrap;
-    min-width: 0;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  min-width: 0;
 }
-
-/* ===== 按钮基础样式 ===== */
-.otw-controls-group button {
-    height: 36px;
-    border-radius: 8px;
-    border: 1px solid var(--background-modifier-border);
-    background: var(--background-primary);
-    color: var(--text-normal);
-    font-size: 14px;
-    box-shadow: 0 1px 3px var(--background-modifier-box-shadow);
-    flex: 0 0 auto;
-    white-space: nowrap;
-    overflow: hidden;
+.otw-controls-group button,
+.otw-controls-group select {
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--background-modifier-border);
+  color: var(--text-normal);
+  background: var(--background-primary);
+  font-size: 14px;
 }
-
-/* 按钮文本样式 */
-.otw-controls-group button span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    min-width: 0;
-}
-
-.otw-controls-group button:hover {
-    background: var(--background-modifier-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px var(--background-modifier-box-shadow);
-}
-
-.otw-controls-group button:disabled {
-    opacity: 0.5;
-    background: var(--background-primary) !important;
-    color: var(--text-muted) !important;
-    cursor: not-allowed !important;
-    transform: none;
-    border-color: var(--background-modifier-border) !important;
-    box-shadow: none;
-}
-
-/* 特殊按钮样式 */
 .otw-controls-group .otw-refresh-button {
-    width: 36px;
-    padding: 0;
-    flex: none;
-    margin: 0;
+  width: 36px;
+  padding: 0;
+  flex: 0 0 36px;
+  margin: 0;
 }
-
-.otw-controls-group .otw-copy-button {
-    width: 72px;
-    background-color: var(--text-accent);
-    color: var(--text-on-accent);
-    border: none;
+.otw-controls-group .otw-theme-select {
+  min-width: 80px;
+  max-width: 160px;
+  flex: 0 1 120px;
 }
-
+.otw-controls-group .otw-copy-button,
 .otw-controls-group .otw-generate-image-button,
 .otw-controls-group .otw-preview-publish-button {
-    width: 72px;
-    background-color: var(--text-accent);
-    color: var(--text-on-accent);
-    border: none;
+  flex: 0 0 72px;
+  width: 72px;
+  padding: 0 8px;
+  white-space: nowrap;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border: none;
 }
-
-.otw-controls-group .otw-copy-button:hover,
-.otw-controls-group .otw-generate-image-button:hover,
-.otw-controls-group .otw-preview-publish-button:hover {
-    color: var(--text-on-accent);
-    background-color: var(--text-accent);
+.otw-controls-group button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
 }
-
-.otw-image-progress {
-    display: none;
-    padding: 10px 12px;
-    border-top: 1px solid var(--background-modifier-border);
-    background: var(--background-primary);
-}
-
-.otw-image-progress.is-visible {
-    display: block;
-}
-
-.otw-image-progress-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-normal);
-    line-height: 1.4;
-}
-
-.otw-image-progress-detail {
-    margin-top: 4px;
-    font-size: 12px;
-    color: var(--text-muted);
-    line-height: 1.4;
-    word-break: break-word;
-}
-
-.otw-image-progress-track {
-    height: 6px;
-    margin-top: 8px;
-    border-radius: 999px;
-    background: var(--background-modifier-border);
-    overflow: hidden;
-}
-
-.otw-image-progress-bar {
-    width: 0%;
-    height: 100%;
-    border-radius: inherit;
-    background: var(--text-accent);
-    transition: width 0.2s ease;
-}
-
-/* ===== 下拉选择器 ===== */
-.custom-select-container {
-    position: relative;
-    min-width: 80px;
-    max-width: 160px;
-    flex: 0 1 160px;
-}
-
-.custom-select {
-    height: 36px;
-    padding: 0 12px;
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 8px;
-    background: var(--background-primary);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.2s ease;
-    color: var(--text-normal);
-    box-shadow: 0 1px 3px var(--background-modifier-box-shadow);
-    white-space: nowrap;
-    overflow: hidden;
-}
-.selected-text {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    flex: 1;
-    min-width: 0;
-}
-.custom-select:hover {
-    background: var(--background-modifier-hover);
-    box-shadow: 0 2px 6px var(--background-modifier-box-shadow);
-}
-
-.custom-select.disabled {
-    pointer-events: none;
-    opacity: 0.5;
-    background: var(--background-secondary) !important;
-    color: var(--text-muted) !important;
-    border-color: var(--background-modifier-border) !important;
-    cursor: not-allowed;
-    box-shadow: none;
-}
-
-.select-arrow {
-    color: var(--text-normal);
-    font-size: 12px;
-    transition: transform 0.2s ease;
-    margin-left: 4px;
-    flex-shrink: 0;
-}
-
-.select-dropdown {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    width: 100%;
-    background: var(--background-primary);
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 8px;
-    box-shadow: 0 4px 12px var(--background-modifier-box-shadow);
-    display: none;
-    z-index: 1000;
-    overflow: hidden;
-}
-
-.select-dropdown.show {
-    display: block;
-}
-
-.select-item {
-    padding: 8px 12px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: var(--text-normal);
-}
-
-.select-item:hover {
-    background: var(--background-modifier-hover);
-}
-
-.select-item.selected {
-    background: var(--background-modifier-hover);
-    color: var(--text-accent);
-}
-
-/* 空文件，预留 */
 
 /* src/styles/view/preview.css */
-/* ===== 预览区域 ===== */
 .otw-preview-area {
-    flex: 1 1 0;
-    min-height: 0;
-    padding: 10px 20px 20px 20px;
-    margin: 10px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    background: #fcfcfc;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02);
-    border: 1px solid rgba(82, 144, 220, 0.08);
+  flex: 1 1 0;
+  min-height: 0;
+  padding: 10px 20px 20px 20px;
+  margin: 10px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #fcfcfc;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(82, 144, 220, 0.08);
 }
-
 .otw-empty-message {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    color: var(--text-muted);
-    font-size: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 16px;
+}
+.otw-render-stage {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  width: 750px;
+  pointer-events: none;
+  opacity: 0;
 }
 
 /* src/styles/settings/settings.css */
-/* 整体容器 */
 .otw-settings {
-    margin: 0 auto;
-    padding: 20px;
-    background-color: var(--background-primary);
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin: 0 auto;
+  padding: 20px;
+  background-color: var(--background-primary);
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
-
-/* 标题样式 */
 .otw-settings h2 {
-    margin: 20px 0;
-    padding-bottom: 1rem;
-    border-bottom: 2px solid var(--background-modifier-border);
-    font-size: 1.6em;
-    color: var(--text-normal);
+  margin: 20px 0;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--background-modifier-border);
+  font-size: 1.6em;
+  color: var(--text-normal);
 }
-
 .otw-regex-rules {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin: 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 12px 0;
 }
-
 .otw-regex-rule-card {
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 8px;
-    padding: 12px;
-    background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--background-secondary);
 }
-
 .otw-regex-rule-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
 }
-
 .otw-regex-rule-title {
-    font-weight: 600;
-    color: var(--text-normal);
+  font-weight: 600;
+  color: var(--text-normal);
 }
-
 .otw-regex-rule-delete {
-    flex: 0 0 auto;
+  flex: 0 0 auto;
 }
-
 .otw-regex-rule-test-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
 }
-
 .otw-regex-rule-result {
-    color: var(--text-muted);
-    line-height: 1.5;
-    word-break: break-word;
+  color: var(--text-muted);
+  line-height: 1.5;
+  word-break: break-word;
 }
-
 .otw-image-generation-summary,
 .otw-image-generation-format {
-    margin: 8px 0;
-    color: var(--text-muted);
-    line-height: 1.5;
+  margin: 8px 0;
+  color: var(--text-muted);
+  line-height: 1.5;
 }
-
 .modal.otw-image-generation-modal {
-    width: min(900px, 90vw);
+  width: min(900px, 90vw);
 }
-
 .otw-modal-heading {
-    align-items: flex-start;
-    padding-left: 0;
+  align-items: flex-start;
+  padding-left: 0;
 }
-
 .otw-modal-heading .setting-item-info {
-    margin-left: 0;
+  margin-left: 0;
 }
-
 .otw-modal-heading .setting-item-name {
-    font-size: 1.5em;
-    line-height: 1.2;
-    text-align: left;
+  font-size: 1.5em;
+  line-height: 1.2;
+  text-align: left;
 }
-
 .otw-api-text-input {
-    width: 320px;
-    min-width: 320px;
-    max-width: 320px;
+  width: 320px;
+  min-width: 320px;
+  max-width: 320px;
 }
-
 .otw-api-text-setting .setting-item-control,
 .otw-api-text-setting .setting-item-control .text-component {
-    flex: 0 0 320px;
+  flex: 0 0 320px;
 }
-
 .otw-api-key-setting .setting-item-control {
-    position: relative;
+  position: relative;
 }
-
 .otw-api-key-setting .text-component {
-    flex: 0 0 320px;
+  flex: 0 0 320px;
 }
-
 .otw-api-key-input {
-    padding-right: 36px;
+  padding-right: 36px;
 }
-
 .otw-api-key-toggle {
-    position: absolute;
-    right: 6px;
-    top: 50%;
-    transform: translateY(-50%);
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
 }
-
 .otw-api-key-toggle.clickable-icon {
-    padding: 4px;
+  padding: 4px;
 }
-
 .otw-prompt-format-section {
-    margin-top: 12px;
-    padding: 12px 0;
-    background: var(--background-primary);
+  margin-top: 12px;
+  padding: 12px 0;
+  background: var(--background-primary);
 }
-
 .otw-two-field-row {
-    display: grid;
-    grid-template-columns: auto minmax(120px, 1fr) auto minmax(120px, 1fr);
-    gap: 8px;
-    align-items: center;
-    padding: 8px 0;
+  display: grid;
+  grid-template-columns: auto minmax(120px, 1fr) auto minmax(120px, 1fr);
+  gap: 8px;
+  align-items: center;
+  padding: 8px 0;
 }
-
 .otw-inline-field-label {
-    color: var(--text-normal);
-    white-space: nowrap;
+  color: var(--text-normal);
+  white-space: nowrap;
 }
-
 .otw-two-field-row select {
-    width: 100%;
+  width: 100%;
 }
-
 .otw-prompt-format-title {
-    margin-bottom: 8px;
-    font-weight: 400;
-    color: var(--text-normal);
+  margin-bottom: 8px;
+  font-weight: 400;
+  color: var(--text-normal);
 }
-
 .otw-prompt-format-code {
-    display: block;
-    padding: 8px;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--text-normal);
-    white-space: pre-wrap;
+  display: block;
+  padding: 8px;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-normal);
+  white-space: pre-wrap;
 }
-
 .otw-prompt-format-section textarea {
-    width: 100%;
-    min-width: 420px;
+  width: 100%;
+  min-width: 420px;
 }
-
 .otw-prompt-test-block {
-    margin-top: 12px;
+  margin-top: 12px;
 }
-
 .otw-prompt-test-title {
-    font-weight: 600;
-    color: var(--text-normal);
+  font-weight: 600;
+  color: var(--text-normal);
 }
-
 .otw-prompt-test-desc {
-    margin-top: 4px;
-    color: var(--text-muted);
-    font-size: 12px;
-    line-height: 1.5;
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
 }
-
 .otw-prompt-test-textarea {
-    width: 100%;
-    margin-top: 8px;
+  width: 100%;
+  margin-top: 8px;
 }
-
 .otw-prompt-format-test-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
 }
-
 .otw-prompt-format-test-result {
-    color: var(--text-muted);
-    line-height: 1.5;
+  color: var(--text-muted);
+  line-height: 1.5;
 }
-
 .otw-image-generation-header-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin: 8px 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 0 12px;
 }
-
 .otw-image-generation-all-button {
-    flex: 0 0 auto;
+  flex: 0 0 auto;
 }
-
 .otw-image-generation-task-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
 }
-
 .otw-image-generation-task {
-    padding: 6px 0;
-    background: var(--background-primary);
+  padding: 6px 0;
+  background: var(--background-primary);
 }
-
 .otw-image-generation-task-line {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
-
 .otw-image-generation-task-index {
-    flex: 0 0 auto;
-    font-weight: 400;
-    color: var(--text-normal);
+  flex: 0 0 auto;
+  font-weight: 400;
+  color: var(--text-normal);
 }
-
 .otw-image-generation-prompt-input {
-    flex: 1 1 auto;
-    min-width: 0;
-    width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
 }
-
 .otw-image-generation-task-button {
-    flex: 0 0 auto;
+  flex: 0 0 auto;
 }
-
 .otw-image-generation-status-line {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin-top: 6px;
-    padding-left: 24px;
-    color: var(--text-muted);
-    line-height: 1.5;
-    word-break: break-word;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  padding-left: 24px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  word-break: break-word;
 }
-
 .otw-image-generation-task-status,
 .otw-image-generation-task-detail {
-    color: var(--text-muted);
+  color: var(--text-muted);
 }
-
 .otw-image-generation-empty {
-    padding: 12px;
-    color: var(--text-muted);
-    border: 1px dashed var(--background-modifier-border);
-    border-radius: 8px;
+  padding: 12px;
+  color: var(--text-muted);
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: 8px;
 }
-
 .otw-account-manager-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
 }
-
 .otw-account-manager-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 12px;
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 8px;
-    background: var(--background-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background: var(--background-secondary);
 }
-
 .otw-account-manager-info {
-    min-width: 0;
+  min-width: 0;
 }
-
 .otw-account-manager-name {
-    font-weight: 600;
-    color: var(--text-normal);
+  font-weight: 600;
+  color: var(--text-normal);
 }
-
 .otw-account-manager-appid {
-    margin-top: 4px;
-    color: var(--text-muted);
-    font-size: 12px;
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
 }
-
 .otw-account-manager-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
 }
-
 .otw-account-manager-empty {
-    margin-top: 12px;
-    padding: 12px;
-    color: var(--text-muted);
-    border: 1px dashed var(--background-modifier-border);
-    border-radius: 8px;
+  margin-top: 12px;
+  padding: 12px;
+  color: var(--text-muted);
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: 8px;
 }
 
 /* src/styles/theme-editor.css */
-/* ===== 主题编辑器 ===== */
-
-/* 整体布局 */
 .otw-theme-editor {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
-
 .modal.otw-theme-editor-modal {
-    max-width: 90vw !important;
-    width: 90vw !important;
-    height: 85vh !important;
-    padding: 0 !important;
-    overflow: hidden;
+  max-width: 90vw !important;
+  width: 90vw !important;
+  height: 85vh !important;
+  padding: 0 !important;
+  overflow: hidden;
 }
-
-/* 主布局：左侧 + 右侧 */
 .otw-theme-editor-layout {
-    display: flex;
-    height: 85vh;
-    overflow: hidden;
+  display: flex;
+  height: 85vh;
+  overflow: hidden;
 }
-
-/* 左侧面板 */
 .otw-theme-editor-sidebar {
-    width: 200px;
-    min-width: 200px;
-    background: var(--background-primary);
-    border-right: 1px solid var(--background-modifier-border);
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
+  width: 200px;
+  min-width: 200px;
+  background: var(--background-primary);
+  border-right: 1px solid var(--background-modifier-border);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
 }
-
-.otw-theme-editor-sidebar h3 {
-    margin: 0 0 12px;
-    font-size: 14px;
-    color: var(--text-normal);
-}
-
 .otw-theme-editor-add-btn {
-    width: 100%;
-    padding: 8px;
-    border: 1px dashed var(--background-modifier-border);
-    border-radius: 6px;
-    background: transparent;
-    color: var(--text-muted);
-    cursor: pointer;
-    font-size: 13px;
-    margin-bottom: 12px;
-    transition: all 0.2s;
+  width: 100%;
+  padding: 8px;
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 13px;
+  margin-bottom: 12px;
+  transition: all 0.2s;
 }
-
 .otw-theme-editor-add-btn:hover {
-    border-color: var(--interactive-accent);
-    color: var(--interactive-accent);
+  border-color: var(--interactive-accent);
+  color: var(--interactive-accent);
 }
-
 .otw-theme-editor-list {
-    flex: 1;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
-
 .otw-theme-editor-item {
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 13px;
-    color: var(--text-normal);
-    background: transparent;
-    transition: all 0.15s;
+  border: 0;
+  box-shadow: none;
+  text-align: left;
+  white-space: nowrap;
+  min-height: 34px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-normal);
+  background: transparent;
+  transition: all 0.15s;
 }
-
 .otw-theme-editor-item:hover {
-    background: var(--background-modifier-hover);
+  background: var(--background-modifier-hover);
 }
-
 .otw-theme-editor-item.active {
-    background: var(--interactive-accent);
-    color: var(--text-on-accent);
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
 }
-
-/* 右侧主区域 */
 .otw-theme-editor-main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
-
 .otw-theme-editor-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--background-modifier-border);
-    background: var(--background-primary);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
 }
-
 .otw-theme-editor-name-input {
-    flex: 1;
-    padding: 6px 10px;
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 6px;
-    background: var(--background-secondary);
-    color: var(--text-normal);
-    font-size: 14px;
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  font-size: 14px;
 }
-
 .otw-theme-editor-name-input:focus {
-    outline: none;
-    border-color: var(--interactive-accent);
+  outline: none;
+  border-color: var(--interactive-accent);
 }
-
 .otw-theme-editor-header-actions {
-    display: flex;
-    gap: 8px;
+  display: flex;
+  gap: 8px;
 }
-
 .otw-theme-editor-delete-btn,
 .otw-theme-editor-close-btn {
-    padding: 6px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 13px;
-    border: 1px solid var(--background-modifier-border);
-    background: var(--background-primary);
-    color: var(--text-normal);
-    transition: all 0.2s;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  transition: all 0.2s;
 }
-
 .otw-theme-editor-delete-btn:hover {
-    border-color: var(--text-error);
-    color: var(--text-error);
+  border-color: var(--text-error);
+  color: var(--text-error);
 }
-
 .otw-theme-editor-close-btn:hover {
-    background: var(--interactive-accent);
-    color: var(--text-on-accent);
-    border-color: var(--interactive-accent);
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border-color: var(--interactive-accent);
 }
-
-/* 下半区 */
 .otw-theme-editor-bottom {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
-
-/* Tab 栏 */
 .otw-theme-editor-tabs {
-    display: flex;
-    border-bottom: 1px solid var(--background-modifier-border);
-    background: var(--background-secondary);
-    padding: 0 8px;
-    overflow-x: auto;
-    flex-shrink: 0;
+  display: flex;
+  border-bottom: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  padding: 0 8px;
+  overflow-x: auto;
+  flex-shrink: 0;
 }
-
 .otw-theme-editor-tab {
-    padding: 10px 16px;
-    font-size: 13px;
-    color: var(--text-muted);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    white-space: nowrap;
-    transition: all 0.15s;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  height: 40px;
+  flex: none;
+  padding: 10px 16px;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: all 0.15s;
 }
-
 .otw-theme-editor-tab:hover {
-    color: var(--text-normal);
+  color: var(--text-normal);
 }
-
 .otw-theme-editor-tab.active {
-    color: var(--interactive-accent);
-    border-bottom-color: var(--interactive-accent);
+  color: var(--interactive-accent);
+  border-bottom-color: var(--interactive-accent);
 }
-
-/* 编辑+预览分栏 */
 .otw-theme-editor-split {
-    flex: 1;
-    display: flex;
-    overflow: hidden;
+  flex: 1;
+  display: flex;
+  overflow: hidden;
 }
-
-/* 编辑区 */
 .otw-theme-editor-editor {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px;
-    min-width: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  min-width: 0;
 }
-
 .otw-theme-editor-tab-content {
-    max-width: 500px;
+  max-width: 500px;
 }
-
-.otw-theme-editor-tab-content h4 {
-    margin: 0 0 16px;
-    font-size: 15px;
-    color: var(--text-normal);
-    border-bottom: 1px solid var(--background-modifier-border);
-    padding-bottom: 8px;
-}
-
-.otw-theme-editor-tab-content h5 {
-    margin: 16px 0 8px;
-    font-size: 13px;
-    color: var(--text-muted);
-}
-
-/* 表单字段 */
 .otw-theme-editor-field {
-    margin-bottom: 12px;
+  margin-bottom: 12px;
 }
-
 .otw-theme-editor-field label {
-    display: block;
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-bottom: 4px;
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
 }
-
 .otw-theme-editor-input {
-    width: 100%;
-    padding: 8px 10px;
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 6px;
-    background: var(--background-primary);
-    color: var(--text-normal);
-    font-size: 13px;
-    font-family: "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: 13px;
+  font-family:
+    "Fira Code",
+    "JetBrains Mono",
+    Consolas,
+    Monaco,
+    monospace;
 }
-
 .otw-theme-editor-input:focus {
-    outline: none;
-    border-color: var(--interactive-accent);
+  outline: none;
+  border-color: var(--interactive-accent);
 }
-
 .otw-theme-editor-textarea {
-    width: 100%;
-    min-height: 80px;
-    padding: 8px 10px;
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 6px;
-    background: var(--background-primary);
-    color: var(--text-normal);
-    font-size: 12px;
-    font-family: "Fira Code", "JetBrains Mono", Consolas, Monaco, monospace;
-    resize: vertical;
-    line-height: 1.6;
+  width: 100%;
+  min-height: 80px;
+  padding: 8px 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: 12px;
+  font-family:
+    "Fira Code",
+    "JetBrains Mono",
+    Consolas,
+    Monaco,
+    monospace;
+  resize: vertical;
+  line-height: 1.6;
 }
-
 .otw-theme-editor-textarea:focus {
-    outline: none;
-    border-color: var(--interactive-accent);
+  outline: none;
+  border-color: var(--interactive-accent);
 }
-
-/* 颜色选择器 */
-.otw-theme-editor-field-color {
-    display: flex;
-    flex-direction: column;
-}
-
 .otw-theme-editor-color-wrap {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
-
 .otw-theme-editor-color {
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 6px;
-    cursor: pointer;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  cursor: pointer;
 }
-
-.otw-theme-editor-title-section {
-    margin-bottom: 16px;
-    padding: 12px;
-    border-radius: 8px;
-    background: var(--background-secondary);
-}
-
-/* 预览区 */
 .otw-theme-editor-preview-area {
-    flex: 1;
-    border-left: 1px solid var(--background-modifier-border);
-    background: var(--background-secondary);
-    padding: 16px;
-    overflow-y: auto;
-    min-width: 0;
+  flex: 1;
+  border-left: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  padding: 16px;
+  overflow-y: auto;
+  min-width: 0;
 }
-
-.otw-theme-editor-preview-area h4 {
-    margin: 0 0 12px;
-    font-size: 13px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
 .otw-theme-editor-preview-content {
-    background: #fcfcfc;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  background: #fcfcfc;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+@media (max-width: 760px) {
+  .otw-theme-editor-layout {
+    flex-direction: column;
+  }
+  .otw-theme-editor-sidebar {
+    width: 100%;
+    min-width: 0;
+    padding: 10px;
+    border-right: 0;
+    border-bottom: 1px solid var(--background-modifier-border);
+  }
+  .otw-theme-editor-sidebar .setting-item-heading {
+    display: none;
+  }
+  .otw-theme-editor-add-btn {
+    margin-bottom: 6px;
+  }
+  .otw-theme-editor-list {
+    flex-direction: row;
+    overflow-x: auto;
+    flex: none;
+  }
+  .otw-theme-editor-item {
+    flex: none;
+  }
+  .otw-theme-editor-header {
+    flex-wrap: wrap;
+    padding: 10px;
+    gap: 8px;
+  }
+  .otw-theme-editor-name-input {
+    flex-basis: 100%;
+  }
+  .otw-theme-editor-header-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .otw-theme-editor-split {
+    flex-direction: column;
+  }
+  .otw-theme-editor-editor,
+  .otw-theme-editor-preview-area {
+    min-height: 0;
+    padding: 10px;
+  }
+  .otw-theme-editor-preview-area {
+    border-left: 0;
+    border-top: 1px solid var(--background-modifier-border);
+  }
+  .otw-theme-editor-preview-content {
+    padding: 12px;
+  }
 }
 
 /* src/styles/index.css */
-/* ===== 通用弹窗组件 ===== */
 .otw-modal-input {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 6px;
-    background: var(--background-primary);
-    color: var(--text-normal);
-    font-size: 14px;
-    box-sizing: border-box;
-    line-height: 1.5;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: 14px;
+  box-sizing: border-box;
+  line-height: 1.5;
 }
-
 .otw-publish-field select.otw-modal-input {
-    cursor: pointer;
-    line-height: 1.6 !important;
-    min-height: 36px !important;
-    height: auto !important;
-    padding: 10px 12px !important;
+  cursor: pointer;
+  line-height: 1.6 !important;
+  min-height: 36px !important;
+  height: auto !important;
+  padding: 10px 12px !important;
 }
-
 .otw-modal-input:focus {
-    outline: none;
-    border-color: var(--interactive-accent);
-    box-shadow: 0 0 0 2px var(--interactive-accent-hover);
+  outline: none;
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 2px var(--interactive-accent-hover);
 }
-
-/* ===== 封面图选择弹窗 ===== */
 .otw-cover-modal h2 {
-    margin: 0 0 12px;
+  margin: 0 0 12px;
 }
-
 .otw-modal-tabs {
-    display: flex;
-    border-bottom: 1px solid var(--background-modifier-border);
-    margin-bottom: 15px;
+  display: flex;
+  border-bottom: 1px solid var(--background-modifier-border);
+  margin-bottom: 15px;
 }
-
 .otw-modal-tab {
-    padding: 10px 20px;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
 }
-
 .otw-modal-tab:hover {
-    background-color: var(--background-modifier-hover);
+  background-color: var(--background-modifier-hover);
 }
-
 .otw-modal-tab.active {
-    border-bottom-color: var(--interactive-accent);
-    color: var(--interactive-accent);
-    font-weight: 600;
+  border-bottom-color: var(--interactive-accent);
+  color: var(--interactive-accent);
+  font-weight: 600;
 }
-
 .otw-modal-content {
-    min-height: 200px;
-    max-height: 400px;
-    overflow-y: auto;
+  min-height: 200px;
+  max-height: 400px;
+  overflow-y: auto;
 }
-
 .otw-modal-content-hidden {
-    display: none !important;
+  display: none !important;
 }
-
 .otw-modal-image-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 10px;
-    padding: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  padding: 10px;
 }
-
 .otw-modal-image-item {
-    border: 2px solid var(--background-modifier-border);
-    border-radius: 4px;
-    cursor: pointer;
-    overflow: hidden;
-    transition: border-color 0.2s;
+  border: 2px solid var(--background-modifier-border);
+  border-radius: 4px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.2s;
 }
-
 .otw-modal-image-item:hover {
-    border-color: var(--interactive-accent);
+  border-color: var(--interactive-accent);
 }
-
 .otw-modal-image-item.otw-modal-image-selected {
-    border-color: var(--interactive-accent);
-    background-color: var(--interactive-accent-hover);
+  border-color: var(--interactive-accent);
+  background-color: var(--interactive-accent-hover);
 }
-
 .otw-modal-image-item img {
-    width: 100%;
-    height: 80px;
-    object-fit: cover;
-    display: block;
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  display: block;
 }
-
 .otw-modal-empty-msg {
-    text-align: center;
-    padding: 40px;
-    color: var(--text-muted);
+  text-align: center;
+  padding: 40px;
+  color: var(--text-muted);
 }
-
 .otw-modal-file-input-container {
-    padding: 10px;
+  padding: 10px;
 }
-
-.otw-modal-file-input-container input[type="file"] {
-    width: 100%;
-    padding: 10px;
-    border: 2px dashed var(--background-modifier-border);
-    border-radius: 4px;
-    cursor: pointer;
+.otw-modal-file-input-container input[type=file] {
+  width: 100%;
+  padding: 10px;
+  border: 2px dashed var(--background-modifier-border);
+  border-radius: 4px;
+  cursor: pointer;
 }
-
 .otw-modal-image-preview {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 150px;
-    padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 150px;
+  padding: 10px;
 }
-
 .otw-modal-image-preview img {
-    max-width: 100%;
-    max-height: 200px;
-    object-fit: contain;
-    border-radius: 4px;
+  max-width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  border-radius: 4px;
 }
-
 .otw-modal-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid var(--background-modifier-border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid var(--background-modifier-border);
 }
-
 .otw-modal-buttons button {
-    padding: 8px 20px;
-    border-radius: 4px;
-    cursor: pointer;
+  padding: 8px 20px;
+  border-radius: 4px;
+  cursor: pointer;
 }
-
 .otw-modal-btn-cta {
-    background-color: var(--interactive-accent);
-    color: var(--text-on-accent);
-    border: none;
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border: none;
 }
-
 .otw-modal-btn-cta:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  opacity: 0.5;
+  cursor: not-allowed;
 }
-
 .modal.otw-cover-crop-modal {
-    width: min(680px, 92vw);
-    padding: 20px;
+  width: min(680px, 92vw);
+  padding: 20px;
 }
-
 .otw-cover-crop-modal .modal-title,
 .otw-cover-crop-modal .modal-close-button {
-    display: none;
+  display: none;
 }
-
 .otw-cover-crop-modal .modal-content {
-    margin-top: 0;
+  margin-top: 0;
 }
-
 .otw-cover-crop-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
 }
-
 .otw-cover-crop-title {
-    flex: 1;
-    min-width: 0;
-    font-size: var(--font-ui-medium);
-    font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-ui-medium);
+  font-weight: 600;
 }
-
 .otw-cover-crop-header button {
-    min-height: 34px;
-    border-radius: 6px;
-    flex-shrink: 0;
+  min-height: 34px;
+  border-radius: 6px;
+  flex-shrink: 0;
 }
-
 .otw-cover-crop-stage {
-    height: clamp(180px, 45vh, 380px);
-    overflow: hidden;
-    border-radius: 6px;
-    background: var(--background-secondary);
+  height: clamp(180px, 45vh, 380px);
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--background-secondary);
 }
-
 .otw-cover-crop-stage > img {
-    display: block;
-    max-width: 100%;
-    opacity: 0;
+  display: block;
+  max-width: 100%;
+  opacity: 0;
 }
-
 .otw-cover-crop-stage:focus-visible {
-    outline: 2px solid var(--interactive-accent);
-    outline-offset: 2px;
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
 }
-
 .otw-cover-crop-modal .cropper-view-box {
-    outline: 2px solid var(--interactive-accent);
-    outline-offset: -1px;
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: -1px;
 }
-
 .otw-cover-crop-modal .cropper-modal {
-    background: var(--background-primary);
-    opacity: 0.6;
+  background: var(--background-primary);
+  opacity: 0.6;
 }
-
 .otw-cover-crop-modal .cropper-face {
-    background: transparent;
+  background: transparent;
 }
-
 .otw-cover-crop-modal .cropper-drag-box,
 .otw-cover-crop-modal .cropper-face {
-    cursor: grab;
+  cursor: grab;
 }
-
 .otw-cover-crop-controls {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    max-width: 460px;
-    margin: 16px auto 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 460px;
+  margin: 16px auto 0;
 }
-
-.otw-cover-crop-controls input[type="range"] {
-    flex: 1;
-    min-width: 0;
-    width: 100%;
-    margin: 0;
+.otw-cover-crop-controls input[type=range] {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  margin: 0;
 }
-
 .otw-cover-crop-modal button.otw-cover-crop-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 34px;
-    width: 34px;
-    height: 34px;
-    padding: 6px;
-    border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  padding: 6px;
+  border-radius: 6px;
 }
-
 .otw-cover-crop-icon svg {
-    width: 18px;
-    height: 18px;
+  width: 18px;
+  height: 18px;
 }
-
 .otw-cover-crop-status {
-    margin-top: 8px;
-    color: var(--text-muted);
-    font-size: var(--font-ui-small);
-    line-height: 1.5;
-    overflow-wrap: anywhere;
+  margin-top: 8px;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
-
 .otw-cover-crop-status:empty {
-    display: none;
+  display: none;
 }
-
-/* ===== 发布弹窗 ===== */
 .otw-publish-modal {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
 }
-
 .otw-publish-title {
-    margin: 0 0 20px;
-    font-size: 20px;
-    font-weight: 600;
-    text-align: center;
+  margin: 0 0 20px;
+  font-size: 20px;
+  font-weight: 600;
+  text-align: center;
 }
-
 .otw-publish-field {
-    margin-bottom: 18px;
-    width: 100%;
+  margin-bottom: 18px;
+  width: 100%;
 }
-
 .otw-publish-field-label {
-    display: block;
-    font-weight: 500;
-    font-size: 13px;
-    color: var(--text-muted);
-    margin-bottom: 6px;
+  display: block;
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
 }
-
-/* 封面图：上下布局，按钮在预览下方 */
 .otw-publish-cover-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
 }
-
 .otw-publish-cover-preview {
-    width: 100%;
-    min-height: 140px;
-    border: 2px dashed var(--background-modifier-border);
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--background-secondary);
-    padding: 8px;
-    box-sizing: border-box;
-    font-size: 13px;
-    color: var(--text-muted);
-    text-align: center;
-    overflow: hidden;
-    flex-shrink: 0;
+  width: 100%;
+  min-height: 140px;
+  border: 2px dashed var(--background-modifier-border);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background-secondary);
+  padding: 8px;
+  box-sizing: border-box;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  overflow: hidden;
+  flex-shrink: 0;
 }
-
 .otw-publish-cover-preview.has-image {
-    border-style: solid;
+  border-style: solid;
 }
-
 .otw-publish-cover-preview img.otw-cover-preview-img {
-    width: 100%;
-    height: auto;
-    display: block;
-    border-radius: 4px;
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 4px;
 }
-
 .otw-publish-select-cover-btn {
-    padding: 8px 14px;
-    border-radius: 6px;
-    border: 1px solid var(--background-modifier-border);
-    background: var(--background-primary);
-    color: var(--text-normal);
-    cursor: pointer;
-    font-size: 13px;
-    white-space: nowrap;
-    align-self: flex-start;
-    transition: all 0.2s;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap;
+  align-self: flex-start;
+  transition: all 0.2s;
 }
-
 .otw-publish-select-cover-btn:hover {
-    background: var(--background-modifier-hover);
+  background: var(--background-modifier-hover);
 }
-
 .otw-publish-divider {
-    border: none;
-    border-top: 1px solid var(--background-modifier-border);
-    margin: 20px 0;
+  border: none;
+  border-top: 1px solid var(--background-modifier-border);
+  margin: 20px 0;
 }
-
 .otw-publish-actions {
-    display: flex;
-    justify-content: center;
+  display: flex;
+  justify-content: center;
 }
-
 .otw-publish-button {
-    padding: 10px 48px;
-    border-radius: 6px;
-    border: none;
-    background-color: var(--interactive-accent);
-    color: var(--text-on-accent);
-    font-size: 15px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.2s;
-    white-space: nowrap;
+  padding: 10px 48px;
+  border-radius: 6px;
+  border: none;
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
 }
-
 .otw-publish-button:hover {
-    background-color: var(--interactive-accent-hover);
-    color: var(--text-on-accent);
+  background-color: var(--interactive-accent-hover);
+  color: var(--text-on-accent);
 }
-
 .otw-publish-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+  opacity: 0.6;
+  cursor: not-allowed;
 }
-
 .otw-publish-button.success {
-    background-color: var(--interactive-accent) !important;
+  background-color: var(--interactive-accent) !important;
 }
-
-/* Modal size overrides */
 .mod-wechat-cover .modal {
-    max-width: 600px;
+  max-width: 600px;
 }
-
 .mod-publish .modal {
-    max-width: 560px;
-    min-width: 360px;
-    padding: 20px 24px;
+  max-width: 560px;
+  min-width: 360px;
+  padding: 20px 24px;
 }
-
 .mod-publish .modal .setting-item-control {
-    width: 100%;
+  width: 100%;
 }
-
-/* Fix select text being cut off vertically */
 .mod-publish .modal select.otw-modal-input {
-    line-height: 1.6 !important;
-    min-height: 36px !important;
-    padding: 8px 12px !important;
+  line-height: 1.6 !important;
+  min-height: 36px !important;
+  padding: 8px 12px !important;
 }
-

@@ -31,7 +31,7 @@ export class CoverCropModal extends Modal {
         const back = header.createEl('button', { cls: 'otw-cover-crop-icon', attr: { type: 'button', 'aria-label': '返回' } });
         setIcon(back, 'arrow-left');
         setTooltip(back, '返回');
-        header.createEl('span', { cls: 'otw-cover-crop-title', text: '裁剪封面 · 2.35:1' });
+        header.createSpan({ cls: 'otw-cover-crop-title', text: '裁剪封面 · 2.35:1' });
         const apply = header.createEl('button', { text: '应用', cls: 'otw-modal-btn-cta', attr: { type: 'button' } });
         apply.disabled = true;
         const stage = root.createDiv({ cls: 'otw-cover-crop-stage', attr: { tabindex: '0', role: 'group', 'aria-label': '封面裁剪区域' } });

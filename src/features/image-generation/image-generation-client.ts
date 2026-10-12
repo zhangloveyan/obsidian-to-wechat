@@ -1,5 +1,6 @@
-import { requestUrl } from 'obsidian';
+import { requestUrl, type RequestUrlParam, type RequestUrlResponse } from 'obsidian';
 import type { ImageGenerationSettings } from '../settings/settings';
+import { errorMessage, isRecord } from '../../shared/errors';
 
 const TERMINAL_STATES = new Set(['completed', 'failed', 'cancelled']);
 
@@ -20,7 +21,7 @@ export class ImageGenerationClient {
     private settings: ImageGenerationSettings;
 
     constructor(settings: ImageGenerationSettings) {
-        this.settings = settings;
+        this.settings = { ...settings };
     }
 
     async generateImage(prompt: string, onProgress?: (message: string) => void, signal?: AbortSignal): Promise<GeneratedImageData> {
@@ -34,12 +35,14 @@ export class ImageGenerationClient {
 
         if (status !== 'completed') {
             const detail = errorDetail(completed.error) || status || '未知状态';
-            throw new Error(`图片生成失败：${detail}`);
+            throw new Error('图片生成失败：' + errorMessage(detail, [this.settings.apiKey]));
         }
 
         const outputUrl = firstOutputUrl(completed);
         checkCancelled(signal);
-        return this.downloadImage(outputUrl);
+        const image = await this.downloadImage(outputUrl);
+        checkCancelled(signal);
+        return image;
     }
 
     private validateSettings(): void {
@@ -50,6 +53,7 @@ export class ImageGenerationClient {
         if (!this.settings.baseUrl.trim()) {
             throw new Error('请先填写图片生成 API 地址。');
         }
+        if (!/^https?:\/\//i.test(this.settings.baseUrl.trim())) throw new Error('图片生成 API 地址必须以 http:// 或 https:// 开头。');
 
         if (!this.settings.model.trim()) {
             throw new Error('请先填写图片生成模型。');
@@ -57,7 +61,7 @@ export class ImageGenerationClient {
     }
 
     private async createPrediction(prompt: string): Promise<ImageTaskPayload> {
-        const response = await requestUrl({
+        const response = await this.request({
             throw: false,
             url: `${normalizeBaseUrl(this.settings.baseUrl)}/v1/images/generations`,
             method: 'POST',
@@ -72,13 +76,8 @@ export class ImageGenerationClient {
                 resolution: this.settings.resolution.trim() || '2K',
                 n: 1,
             }),
-        });
-
-        if (response.status < 200 || response.status >= 300) {
-            throw new Error(httpError('提交图片生成任务', response.status, response.text));
-        }
-
-        return extractTaskPayload(response.json);
+        }, '提交图片生成任务');
+        return this.readTask(response, '提交图片生成任务');
     }
 
     private async waitForPrediction(
@@ -90,7 +89,8 @@ export class ImageGenerationClient {
         let status = String(current.status || '');
         if (TERMINAL_STATES.has(status)) return current;
 
-        const taskId = String(current.task_id || current.id || '').trim();
+        const id = current.task_id || current.id;
+        const taskId = typeof id === 'string' ? id.trim() : '';
         if (!taskId) {
             throw new Error('图片生成接口返回缺少 task_id。');
         }
@@ -120,28 +120,19 @@ export class ImageGenerationClient {
     }
 
     private async getPrediction(taskId: string): Promise<ImageTaskPayload> {
-        const response = await requestUrl({
+        const response = await this.request({
             throw: false,
             url: `${normalizeBaseUrl(this.settings.baseUrl)}/v1/tasks/${encodeURIComponent(taskId)}`,
             method: 'GET',
             headers: {
                 Authorization: `Bearer ${this.settings.apiKey.trim()}`,
             },
-        });
-
-        if (response.status < 200 || response.status >= 300) {
-            throw new Error(httpError('查询图片生成任务 ' + taskId, response.status, response.text));
-        }
-
-        return extractTaskPayload(response.json);
+        }, '查询图片生成任务 ' + taskId);
+        return this.readTask(response, '查询图片生成任务 ' + taskId);
     }
 
     private async downloadImage(outputUrl: string): Promise<GeneratedImageData> {
-        const response = await requestUrl({ url: outputUrl, throw: false });
-
-        if (response.status < 200 || response.status >= 300) {
-            throw new Error(httpError('下载生成图片', response.status, response.text));
-        }
+        const response = await this.request({ url: outputUrl, throw: false }, '下载生成图片');
 
         const type = response.headers['content-type'] || response.headers['Content-Type'] || '';
         if (!type.startsWith('image/') || !response.arrayBuffer.byteLength) {
@@ -153,6 +144,27 @@ export class ImageGenerationClient {
             extension: extensionFromResponse(outputUrl, response.headers),
             outputUrl,
         };
+    }
+
+    private async request(options: RequestUrlParam, stage: string): Promise<RequestUrlResponse> {
+        try {
+            const response = await requestUrl(options);
+            if (response.status < 200 || response.status >= 300) throw new Error(httpError(stage, response.status, response.text));
+            return response;
+        } catch (error) {
+            const note = options.method === 'POST' ? ' 请先检查服务端任务记录，避免重复生成计费。' : '';
+            throw new Error(stage + '：' + errorMessage(error, [this.settings.apiKey.trim()]) + note);
+        }
+    }
+
+    private readTask(response: RequestUrlResponse, stage: string): ImageTaskPayload {
+        let payload: unknown;
+        try { payload = JSON.parse(response.text); }
+        catch { throw new Error(stage + '失败：HTTP ' + response.status + '，响应不是有效 JSON。'); }
+        if (isRecord(payload) && payload.error) {
+            throw new Error(stage + '失败：' + errorMessage(errorDetail(payload.error) || errorDetail(payload.message) || '服务返回错误', [this.settings.apiKey.trim()]));
+        }
+        return extractTaskPayload(payload);
     }
 }
 
@@ -217,10 +229,6 @@ function extensionFromResponse(url: string, headers: Record<string, string>): st
 
 function normalizeBaseUrl(baseUrl: string): string {
     return baseUrl.trim().replace(/\/+$/, '');
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null;
 }
 
 function sleep(ms: number, signal?: AbortSignal): Promise<void> {

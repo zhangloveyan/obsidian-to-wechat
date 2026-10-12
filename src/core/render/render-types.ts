@@ -1,14 +1,18 @@
-import type { App, Component } from 'obsidian';
-import type { ThemeManager } from '../theme/theme-service';
+import type { App } from 'obsidian';
 
 export interface ArticleRenderRequest {
     app: App;
     markdown: string;
     sourcePath?: string;
-    component?: Component;
-    themeManager?: ThemeManager;
     themeCss?: string;
-    convertMathToSVG?: boolean;
+    document?: Document;
+}
+
+export interface RenderedArticle {
+    element: HTMLElement;
+    html: string;
+    markdown: string;
+    sourcePath: string;
 }
 
 export interface ArticleRenderToElementRequest extends ArticleRenderRequest {

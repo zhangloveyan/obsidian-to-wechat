@@ -1,40 +1,30 @@
-import { requestUrl } from 'obsidian';
+import type { App } from 'obsidian';
+import type { RenderedArticle } from '../render/render-types';
+import { readImageAsset, imageDataUrl } from '../../integrations/obsidian/image-assets';
+import { prepareImageForWechat } from './image-output';
 
 export class ClipboardExporter {
-    private static async inlineImages(container: HTMLElement): Promise<void> {
-        const images = container.querySelectorAll('img');
-        for (const img of Array.from(images)) {
-            try {
-                const response = await requestUrl({ url: img.src });
-                const blob = new Blob([response.arrayBuffer], {
-                    type: response.headers['content-type'] || 'image/png',
-                });
-                const reader = new FileReader();
-                await new Promise<void>((resolve, reject) => {
-                    reader.onload = () => {
-                        img.src = String(reader.result || '');
-                        resolve();
-                    };
-                    reader.onerror = reject;
-                    reader.readAsDataURL(blob);
-                });
-            } catch (error) {
-                console.error('Image conversion failed:', error);
+    static async copyArticle(app: App, article: RenderedArticle): Promise<void> {
+        const container = article.element.cloneNode(true) as HTMLElement;
+        const encoded = new Map<string, Promise<string>>();
+        for (const image of Array.from(container.querySelectorAll<HTMLImageElement>('img'))) {
+            const key = image.dataset.otwVaultPath || image.getAttribute('src') || '';
+            if (!key) throw new Error('文章包含没有地址的图片。');
+            let result = encoded.get(key);
+            if (!result) {
+                result = readImageAsset(app, image, article.sourcePath)
+                    .then(asset => prepareImageForWechat(asset, image.ownerDocument)).then(imageDataUrl);
+                encoded.set(key, result);
             }
+            image.src = await result;
+            image.removeAttribute('data-otw-vault-path');
         }
-    }
-
-    static async copyHtml(html: string, plainText: string): Promise<void> {
-        const container = document.createElement('div');
-        container.innerHTML = html;
-        await this.inlineImages(container);
-
-        const finalHtml = container.innerHTML;
-        const clipData = new ClipboardItem({
-            'text/html': new Blob([finalHtml], { type: 'text/html' }),
-            'text/plain': new Blob([plainText], { type: 'text/plain' }),
+        const item = new ClipboardItem({
+            'text/html': new Blob([container.outerHTML], { type: 'text/html' }),
+            'text/plain': new Blob([article.markdown], { type: 'text/plain' }),
         });
-
-        await navigator.clipboard.write([clipData]);
+        const navigator = article.element.ownerDocument.defaultView?.navigator;
+        if (!navigator?.clipboard) throw new Error('当前窗口不支持剪贴板写入。');
+        await navigator.clipboard.write([item]);
     }
 }

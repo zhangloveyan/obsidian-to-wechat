@@ -94,7 +94,7 @@ export function formatImagePromptLine(prompt: string): string {
 }
 
 function promptConflict(): Error {
-    return new Error('提示词位置或内容已改变，已停止回写以保护正文。请关闭并重新打开生图窗口后重试。');
+    return new Error('提示词位置或内容已改变，已停止回写以保护正文。请点击生图窗口的刷新按钮重新读取提示词。');
 }
 
 function findNextImageLine(lines: string[], index: number): number | null {

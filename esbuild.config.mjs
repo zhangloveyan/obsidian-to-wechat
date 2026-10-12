@@ -1,8 +1,7 @@
 import esbuild from "esbuild";
 import process from "process";
-import builtins from "builtin-modules";
-import { readFileSync, writeFileSync } from "fs";
-import { resolve } from "path";
+import { builtinModules } from "node:module";
+import { readFileSync } from "node:fs";
 
 const banner =
 `/*
@@ -16,31 +15,10 @@ ${readFileSync(new URL('./node_modules/cropperjs/LICENSE', import.meta.url), 'ut
 
 const prod = (process.argv[2] === 'production');
 
-// All CSS files to bundle into styles.css (in order)
-const cssFiles = [
-	'node_modules/cropperjs/dist/cropper.css',
-	'src/styles/view/layout.css',
-	'src/styles/view/preview.css',
-	'src/styles/settings/settings.css',
-	'src/styles/theme-editor.css',
-	'src/styles/index.css',
-];
-
-function concatCss(outputPath) {
-	let combined = '';
-	for (const file of cssFiles) {
-		try {
-			const content = readFileSync(resolve(file), 'utf-8');
-			combined += `/* ${file} */\n${content}\n`;
-		} catch (e) {
-			console.warn(`Warning: could not read ${file}:`, e.message);
-		}
-	}
-	// Strip @import lines from index.css since we already inlined the files above
-	combined = combined.replace(/@import\s+url\([^)]+\);\s*\n/g, '');
-	writeFileSync(outputPath, combined);
-	console.log('Bundled CSS to', outputPath);
-}
+const cssOptions = {
+	entryPoints: ['src/styles/index.css'], bundle: true, outfile: 'styles.css',
+	logLevel: 'info', legalComments: 'inline',
+};
 
 const options = {
 	banner: {
@@ -62,7 +40,7 @@ const options = {
 		'@lezer/common',
 		'@lezer/highlight',
 		'@lezer/lr',
-		...builtins],
+		...builtinModules, ...builtinModules.map(name => 'node:' + name)],
 	format: 'cjs',
 	target: 'es2018',
 	logLevel: "info",
@@ -72,7 +50,17 @@ const options = {
 	outfile: 'main.js',
 	loader: {
 		'.css': 'text',
+		'.md': 'text',
+		'.jpg': 'dataurl',
 	},
+	plugins: [{
+		name: 'normalize-text-assets',
+		setup(build) {
+			build.onLoad({ filter: /\.(css|md)$/ }, args => ({
+				contents: readFileSync(args.path, 'utf8').replace(/\r\n?/g, '\n'), loader: 'text',
+			}));
+		},
+	}],
 	metafile: false,
 };
 
@@ -83,7 +71,7 @@ const footer = {
 if (prod) {
 	try {
 		await esbuild.build({ ...options, footer });
-		concatCss('styles.css');
+		await esbuild.build(cssOptions);
 	} catch (e) {
 		console.error(e);
 		process.exit(1);
@@ -91,7 +79,9 @@ if (prod) {
 } else {
 	try {
 		const context = await esbuild.context({ ...options, footer });
+		const cssContext = await esbuild.context(cssOptions);
 		await context.watch();
+		await cssContext.watch();
 	} catch (e) {
 		console.error(e);
 		process.exit(1);

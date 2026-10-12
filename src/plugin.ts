@@ -1,14 +1,15 @@
-import { addIcon, Plugin, removeIcon, TFile } from 'obsidian';
+import { addIcon, Plugin, removeIcon, normalizePath, Notice } from 'obsidian';
 import { PreviewView, VIEW_TYPE_PREVIEW } from './features/preview/preview-view';
 import { ThemeManager } from './core/theme/theme-service';
 import { SettingsManager } from './features/settings/settings';
-import { ContentTransformer } from './core/render/markdown-html-renderer';
 import { WechatSettingTab } from './features/settings/setting-tab';
 import { WechatPublisher } from './integrations/wechat/wechat-publisher';
 import { createLogger, Logger } from './shared/logger';
-import { WechatAccount } from './features/settings/settings';
 import { PLUGIN_ICON_ID, PLUGIN_ICON_SVG } from './shared/plugin-icon';
 import { ImageGenerationService } from './features/image-generation/image-generation-service';
+import { ImageUploadCache } from './integrations/obsidian/image-cache';
+import { PublishService } from './features/publish/publish-service';
+import { errorMessage } from './shared/errors';
 
 export default class WechatPublisherPlugin extends Plugin {
     settingsManager: SettingsManager;
@@ -16,10 +17,8 @@ export default class WechatPublisherPlugin extends Plugin {
     wechatPublisher: WechatPublisher;
     logger: Logger;
     imageGeneration: ImageGenerationService;
-
-    get settings() {
-        return this.settingsManager.getSettings();
-    }
+    imageCache: ImageUploadCache;
+    publishing: PublishService;
 
     async onload() {
         this.logger = createLogger(false);
@@ -30,12 +29,14 @@ export default class WechatPublisherPlugin extends Plugin {
         this.imageGeneration = new ImageGenerationService(this.app, this.settingsManager);
         this.register(() => this.imageGeneration.dispose());
 
-        this.themeManager = new ThemeManager(this);
-        this.themeManager.initialize();
+        this.themeManager = new ThemeManager(this.settingsManager);
 
-        ContentTransformer.initialize(this.app);
-
-        this.wechatPublisher = new WechatPublisher(this);
+        const directory = this.manifest.dir || normalizePath(this.app.vault.configDir + '/plugins/' + this.manifest.id);
+        this.imageCache = new ImageUploadCache(this.app.vault.adapter, directory + '/image-cache.json');
+        await this.imageCache.load().catch(error => this.logger.warn('图片缓存读取失败，将重新上传图片', error));
+        this.wechatPublisher = new WechatPublisher(this.settingsManager, this.imageCache, this.logger);
+        this.publishing = new PublishService(this.app, this.wechatPublisher);
+        this.register(() => this.publishing.dispose());
         this.logger.debug('Wechat publisher initialized');
 
         addIcon(PLUGIN_ICON_ID, PLUGIN_ICON_SVG);
@@ -43,18 +44,18 @@ export default class WechatPublisherPlugin extends Plugin {
 
         this.registerView(
             VIEW_TYPE_PREVIEW,
-            (leaf) => new PreviewView(leaf, this.themeManager, this.settingsManager, this),
+            (leaf) => new PreviewView(leaf, this),
         );
 
         this.addRibbonIcon(PLUGIN_ICON_ID, '打开预览', () => {
-            void this.activateView();
+            void this.activateView().catch(error => { new Notice('打开预览失败：' + errorMessage(error)); });
         });
 
         this.addCommand({
             id: 'open-obsidian-to-wechat',
             name: '打开预览',
             callback: () => {
-                void this.activateView();
+                void this.activateView().catch(error => { new Notice('打开预览失败：' + errorMessage(error)); });
             },
         });
 
@@ -77,17 +78,6 @@ export default class WechatPublisherPlugin extends Plugin {
                 active: true,
             });
         }
-    }
-
-    getDefaultAccount(): WechatAccount | undefined {
-        return this.settingsManager.getDefaultAccount();
-    }
-
-    async publishToWechat(title: string, content: string, thumbMediaId: string, file: TFile, accountId?: string): Promise<boolean> {
-        if (accountId) {
-            this.wechatPublisher.switchAccount(accountId);
-        }
-        return this.wechatPublisher.publishToWechat(title, content, thumbMediaId, file);
     }
 
     onunload() {

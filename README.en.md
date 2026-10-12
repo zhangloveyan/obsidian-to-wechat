@@ -91,6 +91,8 @@ Open a Markdown note -> Open preview -> Choose a theme and adjust styles
 
 The plugin creates WeChat drafts. It does not broadcast articles to subscribers.
 
+The theme editor, article preview, clipboard, and publishing use the same formatting pipeline. Built-in themes are read-only; choose Edit copy (`编辑副本`) to customize a separate theme.
+
 ### Cover cropping
 
 When publishing, choose an article image or a local file as the cover, then confirm to open the crop dialog:
@@ -111,6 +113,8 @@ Put each prompt comment on its own line, keeping the entire comment on a single 
 In the image generation dialog, edit prompts, generate one image or start all tasks, and check each image's status. Edited prompts are written back to the note when generation starts.
 
 Images are saved under `pic/<note name>/` beside the note, and the image link is inserted or updated on the line immediately after its prompt. The prompt comment stays in the note but is hidden in the article preview, so you can reopen the dialog and regenerate the image later.
+
+Closing the dialog does not interrupt running tasks; reopen it to see progress and results. Use the refresh button after manually editing prompts in the note. If a prompt or its linked image changes during generation, the plugin keeps the generated file and reports its path without overwriting the note. Tasks do not continue after quitting Obsidian or unloading the plugin.
 
 ## Screenshots
 
@@ -136,7 +140,8 @@ obsidian-to-wechat/
 |   |-- shared/            # Shared utilities
 |   |-- styles/            # Interface styles
 |   `-- types/             # Data types
-|-- scripts/              # Crop tests and local image API mock
+|-- tests/                # Rendering, settings, generation, and API regressions
+|-- scripts/              # Browser tests, release checks, and local image API mock
 |-- docs/                 # Plans, release notes, and release checklist
 |-- pic/README/           # Documentation screenshots
 |-- .github/workflows/    # Release automation
@@ -149,7 +154,7 @@ obsidian-to-wechat/
 
 ### Local build
 
-Node.js and npm are required. The current release workflow uses Node.js 20.
+Node.js and npm are required. The current release workflow uses Node.js 22.
 
 ```bash
 # Install the locked dependency versions
@@ -167,16 +172,16 @@ Use the generated `main.js`, `manifest.json`, and `styles.css` in a test vault, 
 ### Tests
 
 ```bash
-npm run test:cover
+npm run check
 ```
 
-Cover crop tests use a locally installed Chrome by default. Set `PLAYWRIGHT_CHANNEL` to select another installed browser channel. WeChat uploads are mocked in these tests; no article is actually published.
+This runs type checking, official ESLint rules, unit tests, the build, browser rendering and crop tests, and release metadata checks. Browser tests use local Chrome by default; set `PLAYWRIGHT_CHANNEL` for another installed channel. WeChat and image generation use mocks, so tests do not publish articles or incur generation fees. The Obsidian host is also simulated in browser tests.
 
 ## Privacy
 
-- Account credentials, settings, and uploaded-image cache are stored in the current Obsidian vault. Do not publish configuration files containing secrets.
+- Credentials and settings are stored in `data.json`; uploaded-image records are stored separately in `image-cache.json`, keyed by account and image content. The cache keeps up to 2000 entries for 90 days and can be cleared in settings. Drafts are not cached. Do not publish configuration files containing secrets.
 - Publishing sends articles and images to WeChat. Image generation sends prompts to the configured image generation service.
-- Remote images are loaded from their source URLs. Exporting mathematical formulas as images sends their content to the CodeCogs rendering service.
+- Remote images are loaded from their source URLs. Formulas use CodeCogs images consistently in preview, clipboard output, and publishing, which sends formula content to that service.
 - Cover cropping runs locally without a CDN. A cropped cover is uploaded to WeChat only when you apply it.
 
 ## FAQ

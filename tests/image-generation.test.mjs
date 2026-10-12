@@ -93,3 +93,22 @@ test('plugin unload prevents pending tasks from writing files or article', async
     assert.equal(state.saved.length, 0);
     assert.equal(state.markdown, line('a'));
 });
+
+test('reopening retains completed and failed job details until explicitly refreshed', async () => {
+    const { state, file, service } = setup(line('a'), state => { state.markdown = line('changed'); });
+    const [task] = await service.getTasks(file);
+    await service.generate(file, task, task.prompt);
+    assert.equal(task.status, 'failed');
+    assert.equal((await service.getTasks(file))[0], task);
+    assert.match(task.detail, /图片已保留/);
+    const [current] = await service.reloadTasks(file);
+    assert.equal(current.prompt, 'changed');
+    assert.equal(current.status, 'idle');
+    assert.equal(state.saved.length, 1);
+});
+
+test('concurrent openings share one task registry', async () => {
+    const { file, service } = setup(line('a'));
+    const [a, b] = await Promise.all([service.getTasks(file), service.getTasks(file)]);
+    assert.equal(a, b);
+});

@@ -101,7 +101,6 @@ export interface StructuredTheme {
 
 function githubCodeHighlightCSS(): string {
     return [
-        '.otw-content-section .otw-code-block.hljs { color: #24292f; background: #f6f8fa; }',
         '.otw-content-section .otw-code-block .hljs-doctag, .otw-content-section .otw-code-block .hljs-keyword, .otw-content-section .otw-code-block .hljs-meta .hljs-keyword, .otw-content-section .otw-code-block .hljs-template-tag, .otw-content-section .otw-code-block .hljs-template-variable, .otw-content-section .otw-code-block .hljs-type, .otw-content-section .otw-code-block .hljs-variable.language_ { color: #cf222e; }',
         '.otw-content-section .otw-code-block .hljs-title, .otw-content-section .otw-code-block .hljs-title.class_, .otw-content-section .otw-code-block .hljs-title.class_.inherited__, .otw-content-section .otw-code-block .hljs-title.function_ { color: #8250df; }',
         '.otw-content-section .otw-code-block .hljs-attr, .otw-content-section .otw-code-block .hljs-attribute, .otw-content-section .otw-code-block .hljs-literal, .otw-content-section .otw-code-block .hljs-meta, .otw-content-section .otw-code-block .hljs-number, .otw-content-section .otw-code-block .hljs-operator, .otw-content-section .otw-code-block .hljs-selector-attr, .otw-content-section .otw-code-block .hljs-selector-class, .otw-content-section .otw-code-block .hljs-selector-id, .otw-content-section .otw-code-block .hljs-variable { color: #0550ae; }',
@@ -121,7 +120,7 @@ function githubCodeHighlightCSS(): string {
 
 /** 将结构化主题转为 CSS 字符串 */
 export function themeToCSS(theme: StructuredTheme): string {
-    const parts: string[] = [];
+    const parts: string[] = [githubCodeHighlightCSS()];
 
     // 容器
     if (theme.container) {
@@ -135,19 +134,18 @@ export function themeToCSS(theme: StructuredTheme): string {
     };
     for (const level of titleLevels) {
         const t = theme.title[level];
-        const sel = selectors[level];
+        const scoped = selectors[level].split(',').map(selector => '.otw-content-section ' + selector.trim());
         if (t.base || t.content) {
-            parts.push(`.otw-content-section ${sel} { ${t.base} ${t.content} }`);
+            parts.push(`${scoped.join(', ')} { ${t.base} ${t.content} }`);
         }
         if (t.after) {
-            parts.push(`.otw-content-section ${sel}::after { ${t.after} }`);
+            parts.push(`${scoped.map(selector => selector + '::after').join(', ')} { ${t.after} }`);
         }
     }
 
     // 段落
     if (theme.paragraph) {
         parts.push(`.otw-content-section p { ${theme.paragraph} }`);
-        parts.push('.otw-content-section > p:first-of-type { margin-top: 0; }');
     }
 
     // 列表
@@ -170,18 +168,19 @@ export function themeToCSS(theme: StructuredTheme): string {
     // 代码
     if (theme.code?.block) {
         parts.push(`.otw-content-section .otw-code-block { ${theme.code.block} }`);
-        parts.push('.otw-content-section .otw-code-block code { display: block; min-width: 100%; max-width: none; white-space: nowrap; word-break: normal; overflow-wrap: normal; word-wrap: normal; tab-size: 4; }');
     }
     if (theme.code?.inline) {
-        parts.push(`.otw-content-section p code, .otw-content-section li code, .otw-content-section blockquote code, .otw-content-section td code, .otw-content-section th code { ${theme.code.inline} }`);
+        parts.push(`.otw-content-section code:not(.otw-code-body) { ${theme.code.inline} }`);
     }
     if (theme.code?.header?.container) {
         parts.push(`.otw-content-section .otw-code-header { ${theme.code.header.container} }`);
     }
     if (theme.code?.header?.dot) {
-        parts.push(`.otw-content-section .mac-sign svg ellipse { ${theme.code.header.dot} }`);
+        parts.push(`.otw-content-section .otw-code-dot { ${theme.code.header.dot} }`);
     }
-    parts.push(githubCodeHighlightCSS());
+    (theme.code?.header?.colors || ['#ff5f56', '#ffbd2e', '#27c93f']).forEach((color, index) => {
+        parts.push(`.otw-content-section .otw-code-dot-${index} { background-color: ${color}; }`);
+    });
 
     // 图片
     if (theme.image) {

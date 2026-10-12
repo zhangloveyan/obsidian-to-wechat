@@ -1,4 +1,5 @@
 import { TFile, type App } from 'obsidian';
+import { outsideCode } from '../../shared/markdown-text';
 
 export interface ImagePathResolution {
     file: TFile | null;
@@ -32,7 +33,12 @@ export function isRemoteOrDataImage(path: string): boolean {
 
 export function resolveImageFile(app: App, rawPath: string, sourcePath: string): ImagePathResolution {
     const normalizedPath = normalizeImagePath(rawPath);
-    const attempts = buildPathAttempts(rawPath, normalizedPath);
+    const attempts = [normalizedPath, normalizedPath.replace(/^\.\/+/, '')];
+    if (normalizedPath.startsWith('app://')) {
+        const matches = app.vault.getFiles().filter(file => normalizedPath.endsWith('/' + file.path));
+        const file = matches.sort((a, b) => b.path.length - a.path.length)[0] || null;
+        return { file, originalPath: rawPath, normalizedPath, attempts };
+    }
 
     for (const attempt of attempts) {
         const linkedFile = app.metadataCache.getFirstLinkpathDest(attempt, sourcePath);
@@ -49,54 +55,11 @@ export function resolveImageFile(app: App, rawPath: string, sourcePath: string):
     return { file: null, originalPath: rawPath, normalizedPath, attempts };
 }
 
-export function extractImagePathsFromMarkdown(markdown: string): string[] {
-    const paths: string[] = [];
-    const addPath = (path: string) => {
-        const cleanPath = path.trim();
-        if (cleanPath && !paths.includes(cleanPath)) paths.push(cleanPath);
-    };
-
-    const mdImageRegex = /!\[[^\]]*]\((<[^>]+>|[^)\n]+)\)/g;
-    let match: RegExpExecArray | null;
-    while ((match = mdImageRegex.exec(markdown)) !== null) {
-        addPath(match[1]);
-    }
-
-    const wikiImageRegex = /!\[\[([^\]]+)]]/g;
-    while ((match = wikiImageRegex.exec(markdown)) !== null) {
-        addPath(match[1].split('|')[0]);
-    }
-
-    const htmlImgRegex = /<img[^>]+src=["']([^"']+)["']/gi;
-    while ((match = htmlImgRegex.exec(markdown)) !== null) {
-        addPath(match[1]);
-    }
-
-    return paths;
-}
-
 export function normalizeMarkdownImageDestinations(markdown: string): string {
-    return markdown.replace(/!\[([^\]]*)]\(([^<][^)\n]*\s[^)\n]*)\)/g, (full, alt: string, path: string) => {
+    return outsideCode(markdown, text => text.replace(/!\[([^\]]*)]\(([^<][^)\n]*\s[^)\n]*)\)/g, (full, alt: string, path: string) => {
         const cleanPath = path.trim();
         if (!cleanPath || isRemoteOrDataImage(cleanPath)) return full;
         if (!/\.(png|jpe?g|gif|bmp|webp|svg)$/i.test(normalizeImagePath(cleanPath))) return full;
         return `![${alt}](<${cleanPath}>)`;
-    });
-}
-
-function buildPathAttempts(rawPath: string, normalizedPath: string): string[] {
-    const attempts = new Set<string>();
-    const add = (value: string | undefined) => {
-        const clean = value?.trim();
-        if (clean) attempts.add(clean);
-    };
-
-    add(rawPath);
-    add(normalizedPath);
-    add(normalizedPath.replace(/^\.\/+/, ''));
-
-    const fileName = normalizedPath.split('/').pop();
-    add(fileName);
-
-    return Array.from(attempts);
+    }));
 }

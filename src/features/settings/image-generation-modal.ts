@@ -3,6 +3,7 @@ import type { ImageGenerationSettings } from './settings';
 import { testImageGenerationAndSaveImage } from '../image-generation/image-generation-test';
 import { collectImagePromptEntries, IMAGE_PROMPT_FORMAT } from '../image-generation/prompt-extractor';
 import type WechatPublisherPlugin from '../../plugin';
+import { errorMessage } from '../../shared/errors';
 
 const DEFAULT_PROMPT_SAMPLE = [
     '<!-- image-prompt: 一张科技感公众号封面图，蓝色背景，简洁高级 -->',
@@ -59,12 +60,12 @@ export class ImageGenerationModal extends Modal {
 
         const apiKeySetting = new Setting(contentEl)
             .setName('API 密钥')
-            .setDesc('用于调用图片生成接口的 Bearer Token')
+            .setDesc('用于调用图片生成接口的访问密钥')
             .addText(text => {
                 this.apiKeyInput = text;
                 text.inputEl.type = 'password';
                 text.inputEl.addClass('otw-api-text-input', 'otw-api-key-input');
-                text.setPlaceholder('sk-...').setValue(settings.apiKey);
+                text.setPlaceholder('输入密钥').setValue(settings.apiKey);
             })
             .addExtraButton(button => {
                 let visible = false;
@@ -88,7 +89,7 @@ export class ImageGenerationModal extends Modal {
             .addText(text => {
                 this.modelInput = text;
                 text.inputEl.addClass('otw-api-text-input');
-                text.setPlaceholder('gemini-3.1-flash-image-preview').setValue(settings.model);
+                text.setPlaceholder('输入模型标识').setValue(settings.model);
             });
         modelSetting.settingEl.addClass('otw-api-text-setting');
 
@@ -113,12 +114,12 @@ export class ImageGenerationModal extends Modal {
         this.pollIntervalInput.setPlaceholder('2').setValue(String(settings.pollIntervalSeconds));
 
         const promptFormatSection = contentEl.createDiv({ cls: 'otw-prompt-format-section' });
-        promptFormatSection.createEl('div', { cls: 'otw-prompt-format-title', text: '提示词格式' });
+        promptFormatSection.createDiv({ cls: 'otw-prompt-format-title', text: '提示词格式' });
         promptFormatSection.createEl('code', { cls: 'otw-prompt-format-code', text: IMAGE_PROMPT_FORMAT });
 
         const promptTestBlock = promptFormatSection.createDiv({ cls: 'otw-prompt-test-block' });
-        promptTestBlock.createEl('div', { cls: 'otw-prompt-test-title', text: '提示词测试文本' });
-        promptTestBlock.createEl('div', { cls: 'otw-prompt-test-desc', text: '用于测试固定格式能否被正确提取' });
+        promptTestBlock.createDiv({ cls: 'otw-prompt-test-title', text: '提示词测试文本' });
+        promptTestBlock.createDiv({ cls: 'otw-prompt-test-desc', text: '用于测试固定格式能否被正确提取' });
         this.promptSampleInput = new TextAreaComponent(promptTestBlock);
         this.promptSampleInput.inputEl.rows = 4;
         this.promptSampleInput.inputEl.addClass('otw-prompt-test-textarea');
@@ -139,7 +140,7 @@ export class ImageGenerationModal extends Modal {
                             const path = await this.testApiAndSaveImage();
                             new Notice(`图片生成接口测试成功，测试图片已保存：${path}`, 10000);
                         } catch (error) {
-                            const message = error instanceof Error ? error.message : String(error || '未知错误');
+                            const message = errorMessage(error);
                             new Notice(`图片生成接口测试失败：${message}`, 12000);
                         } finally {
                             btn.setButtonText('测试接口').setDisabled(false);
@@ -154,9 +155,14 @@ export class ImageGenerationModal extends Modal {
                 .setCta()
                 .onClick(() => {
                     void (async () => {
-                        await this.onSave(this.readSettings());
-                        new Notice('图片生成配置已保存');
-                        this.close();
+                        btn.setDisabled(true);
+                        try {
+                            await this.onSave(this.readSettings());
+                            new Notice('图片生成配置已保存');
+                            this.close();
+                        } catch (error) {
+                            new Notice('保存图片生成配置失败：' + errorMessage(error), 10000);
+                        } finally { btn.setDisabled(false); }
                     })();
                 }));
     }
@@ -197,7 +203,7 @@ export class ImageGenerationModal extends Modal {
 function setDropdownOptions(dropdown: DropdownComponent, options: string[], currentValue: string): void {
     const value = currentValue.trim();
     const values = value && !options.includes(value) ? [value, ...options] : options;
-    values.forEach(option => dropdown.addOption(option, option));
+    values.forEach(option => { dropdown.addOption(option, option); });
     dropdown.setValue(value || options[0]);
 }
 

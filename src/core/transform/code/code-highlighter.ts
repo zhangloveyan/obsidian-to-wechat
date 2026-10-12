@@ -18,12 +18,6 @@ function escapeHtml(text: string): string {
 function preserveWhitespace(html: string): string {
     return html
         .replace(/\t/g, '    ')
-        .replace(/(<span[^>]*>[^<]*<\/span>)(\s+)(<span[^>]*>)/g, (_match, left: string, spaces: string, right: string) => {
-            return left + right.replace(/^(<span[^>]*>)/, `$1${spaces}`);
-        })
-        .replace(/(\s+)(<span[^>]*>)/g, (_match, spaces: string, span: string) => {
-            return span.replace(/^(<span[^>]*>)/, `$1${spaces}`);
-        })
         .replace(/(>[^<]+)|(^[^<]+)/g, value => value.replace(/ /g, '&nbsp;'));
 }
 
@@ -41,17 +35,13 @@ export function highlightCodeElement(codeEl: HTMLElement): HighlightedCode {
     const supportedLanguage = highlighter.getLanguage(language) ? language : 'plaintext';
     const text = codeEl.textContent || '';
     const normalizedText = text.replace(/\r\n/g, '\n').replace(/\n$/, '');
-    const lines = normalizedText.split('\n');
+    const highlighted = supportedLanguage === 'plaintext'
+        ? escapeHtml(normalizedText)
+        : highlighter.highlight(normalizedText, { language: supportedLanguage }).value;
 
     return {
         language: supportedLanguage,
         displayLanguage: rawLanguage || supportedLanguage,
-        lines: lines.map(line => {
-            if (!line) return '&nbsp;';
-            const highlighted = supportedLanguage === 'plaintext'
-                ? escapeHtml(line)
-                : highlighter.highlight(line, { language: supportedLanguage }).value;
-            return preserveWhitespace(highlighted) || '&nbsp;';
-        }),
+        lines: preserveWhitespace(highlighted).split('\n').map(line => line || '&nbsp;'),
     };
 }

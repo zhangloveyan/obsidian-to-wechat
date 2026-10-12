@@ -6,6 +6,8 @@ import { chromium } from 'playwright';
 
 // Real browser pixels and Cropper.js, with only the Obsidian host and upload transport replaced.
 function obsidianHost() {
+    Object.defineProperty(Document.prototype, 'win', { get() { return this.defaultView || window; } });
+    window.createEl = tag => document.createElement(tag);
     const modals = [];
     const notices = [];
     const urls = new Set();
@@ -22,6 +24,7 @@ function obsidianHost() {
         return element;
     };
     HTMLElement.prototype.createDiv = function (options) { return this.createEl('div', options); };
+    HTMLElement.prototype.createSpan = function (options) { return this.createEl('span', options); };
     HTMLElement.prototype.empty = function () { this.replaceChildren(); };
     HTMLElement.prototype.setText = function (text) { this.textContent = text; };
     HTMLElement.prototype.addClass = function (...names) { this.classList.add(...names); };
@@ -206,18 +209,21 @@ async function openPicker(mode = 'success') {
                 readBinary: async () => { window.reads++; return fixtureSource.data; },
             },
         };
-        const plugin = { wechatPublisher: {
-            switchAccount: account => { window.uploadAccount = account; },
-            uploadImageToWechat: async (data, name) => {
+        const plugin = { wechatPublisher: { createSession: accountId => ({
+            account: { id: accountId, appId: 'wx-test' },
+            upload: async (data, name) => {
+                window.uploadAccount = accountId;
                 uploads.push({ data, name });
-                if (mode === 'retry' && uploads.length === 1) return '';
+                if (mode === 'retry' && uploads.length === 1) throw new Error('模拟上传失败');
                 if (mode === 'delay') return new Promise(resolve => { window.finishUpload = resolve; });
-                return 'test-media-id';
+                return { media_id: 'test-media-id', url: 'https://example.test/cover.png' };
             },
-        } };
+        }) } };
+        const element = document.createElement('section');
+        element.createEl('img', { attr:{ 'data-otw-vault-path':article.path, src:fixtureUrl } });
         window.picker = new CoverTest.CoverImageModal(app, plugin,
-            { file: { path: '文章.md' }, getViewData: () => '![](attachments/封面测试.png)' },
-            'account-1', (id, url) => { choices.push({ id, url }); });
+            { element, sourcePath: '文章.md', markdown: '![](attachments/封面测试.png)' },
+            'account-1', cover => { choices.push({ id: cover.mediaId, url: cover.previewUrl }); });
         picker.open();
     }, { mode });
 }
@@ -381,7 +387,7 @@ try {
         await page.getByRole('button', { name: '应用', exact: true }).click();
         await page.waitForFunction(() => !!window.finishUpload);
         await page.keyboard.press('Escape');
-        await page.evaluate(async () => { finishUpload('late-id'); await new Promise(resolve => setTimeout(resolve, 20)); });
+        await page.evaluate(async () => { finishUpload({ media_id: 'late-id', url: 'https://example.test/late.png' }); await new Promise(resolve => setTimeout(resolve, 20)); });
         assert.equal(await page.evaluate(() => choices.length), 0);
         assert.equal(await page.locator('.otw-modal-image-selected').count(), 1);
         await closeAll();

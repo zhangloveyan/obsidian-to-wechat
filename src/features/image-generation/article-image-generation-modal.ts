@@ -1,5 +1,6 @@
-import { App, Modal, Notice, Setting, TFile, TextComponent } from 'obsidian';
+import { App, Modal, Notice, Setting, TFile, TextComponent, setIcon, setTooltip } from 'obsidian';
 import { ImageGenerationService, isBusy, type ImagePromptTask } from './image-generation-service';
+import { errorMessage } from '../../shared/errors';
 
 export class ArticleImageGenerationModal extends Modal {
     private alive = false;
@@ -12,6 +13,7 @@ export class ArticleImageGenerationModal extends Modal {
     }
 
     onOpen(): void {
+        this.unsubscribe?.();
         this.alive = true;
         this.modalEl.addClass('otw-image-generation-modal');
         this.contentEl.empty();
@@ -19,6 +21,22 @@ export class ArticleImageGenerationModal extends Modal {
         heading.settingEl.addClass('otw-modal-heading');
         const header = this.contentEl.createDiv({ cls: 'otw-image-generation-header-row' });
         const summary = header.createDiv({ cls: 'otw-image-generation-summary', text: '当前文章：' + this.file.name });
+        const refresh = header.createEl('button', { attr: { 'aria-label': '重新读取提示词' } });
+        setIcon(refresh, 'refresh-cw');
+        setTooltip(refresh, '重新读取文章提示词，清除上次任务结果');
+        refresh.disabled = true;
+        refresh.addEventListener('click', () => {
+            void this.run(async () => {
+                refresh.disabled = true;
+                this.allButton.disabled = true;
+                try {
+                    await this.service.reloadTasks(this.file);
+                    if (this.alive) this.onOpen();
+                } finally {
+                    if (this.alive) refresh.disabled = this.tasks.some(isBusy);
+                }
+            });
+        });
         this.allButton = header.createEl('button', { text: '全部开始生成', cls: 'otw-image-generation-all-button' });
         this.allButton.disabled = true;
         this.allButton.addEventListener('click', () => {
@@ -34,11 +52,12 @@ export class ArticleImageGenerationModal extends Modal {
             const update = () => {
                 updateRows.forEach(render => render());
                 this.allButton.disabled = !tasks.length || tasks.some(isBusy);
+                refresh.disabled = tasks.some(isBusy);
             };
             this.unsubscribe = this.service.subscribe(this.file, update);
             update();
         }).catch(error => {
-            if (this.alive) list.setText(error instanceof Error ? error.message : String(error));
+            if (this.alive) { list.setText(errorMessage(error)); refresh.disabled = false; }
         });
     }
 
@@ -78,6 +97,6 @@ export class ArticleImageGenerationModal extends Modal {
 
     private async run(operation: () => Promise<void>): Promise<void> {
         try { await operation(); }
-        catch (error) { new Notice(error instanceof Error ? error.message : String(error), 12000); }
+        catch (error) { new Notice(errorMessage(error), 12000); }
     }
 }

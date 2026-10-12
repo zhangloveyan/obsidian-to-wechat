@@ -1,6 +1,6 @@
 import type { StructuredTheme } from '../../core/theme/theme-types';
-import type { DocumentMetadata } from '../../types/metadata';
-import type WechatPublisherPlugin from '../../plugin';
+import { builtinStructuredThemes } from '../../core/theme/builtin-themes';
+import { isRecord as record } from '../../shared/errors';
 
 export interface WechatAccount {
     id: string;
@@ -25,7 +25,6 @@ export interface MPSettings {
     defaultAccountId: string;
     lastSelectedAccountId?: string;
     structuredThemes: StructuredTheme[];
-    documentMetadata: Record<string, DocumentMetadata>;
     imageGeneration: ImageGenerationSettings;
 }
 
@@ -44,96 +43,125 @@ const DEFAULT_SETTINGS: MPSettings = {
     wechatAccounts: [],
     defaultAccountId: '',
     structuredThemes: [],
-    documentMetadata: {},
     imageGeneration: DEFAULT_IMAGE_GENERATION_SETTINGS,
 };
 
-export class SettingsManager {
-    plugin: WechatPublisherPlugin;
-    private settings: MPSettings;
+type SettingsListener = (settings: MPSettings) => void;
+interface SettingsStorage {
+    loadData(): Promise<unknown>;
+    saveData(settings: MPSettings): Promise<void>;
+}
 
-    constructor(plugin: WechatPublisherPlugin) {
-        this.plugin = plugin;
-        this.settings = { ...DEFAULT_SETTINGS };
-    }
+export class SettingsManager {
+    private settings: MPSettings = structuredClone(DEFAULT_SETTINGS);
+    private writes: Promise<void> = Promise.resolve();
+    private listeners = new Set<SettingsListener>();
+
+    constructor(private storage: SettingsStorage) {}
 
     async loadSettings(): Promise<void> {
-        const savedData = (await this.plugin.loadData()) || {};
-
-        if (!savedData.wechatAccounts) {
-            savedData.wechatAccounts = [];
-        }
-
-        if (!savedData.structuredThemes) {
-            savedData.structuredThemes = [];
-        }
-
-        savedData.imageGeneration = {
-            ...DEFAULT_IMAGE_GENERATION_SETTINGS,
-            ...(savedData.imageGeneration || {}),
+        const raw: unknown = await this.storage.loadData();
+        const data = record(raw) ? raw : {};
+        const accounts = Array.isArray(data.wechatAccounts) ? data.wechatAccounts.filter(isAccount) : [];
+        const themes = Array.isArray(data.structuredThemes) ? data.structuredThemes.filter(isTheme) : [];
+        const image = record(data.imageGeneration) ? data.imageGeneration : {};
+        this.settings = {
+            activeThemeId: text(data.activeThemeId, 'default'),
+            wechatAccounts: structuredClone(accounts),
+            defaultAccountId: text(data.defaultAccountId),
+            lastSelectedAccountId: text(data.lastSelectedAccountId),
+            structuredThemes: structuredClone(themes),
+            imageGeneration: {
+                apiKey: text(image.apiKey),
+                baseUrl: text(image.baseUrl, DEFAULT_IMAGE_GENERATION_SETTINGS.baseUrl),
+                model: text(image.model, DEFAULT_IMAGE_GENERATION_SETTINGS.model),
+                size: text(image.size, DEFAULT_IMAGE_GENERATION_SETTINGS.size),
+                resolution: text(image.resolution, DEFAULT_IMAGE_GENERATION_SETTINGS.resolution),
+                timeoutSeconds: positive(image.timeoutSeconds, 180),
+                pollIntervalSeconds: positive(image.pollIntervalSeconds, 2),
+            },
         };
-
-        this.settings = { ...DEFAULT_SETTINGS, ...savedData };
     }
 
-    async saveSettings(): Promise<void> {
-        await this.plugin.saveData(this.settings);
+    getSettings(): MPSettings { return structuredClone(this.settings); }
+
+    subscribe(listener: SettingsListener): () => void {
+        this.listeners.add(listener);
+        return () => { this.listeners.delete(listener); };
     }
 
-    getSettings(): MPSettings {
-        return this.settings;
+    updateSettings(updates: Partial<MPSettings>): Promise<void> {
+        const patch = structuredClone(updates);
+        return this.mutate(current => ({ ...current, ...patch }));
     }
 
-    async updateSettings(updates: Partial<MPSettings>): Promise<void> {
-        this.settings = { ...this.settings, ...updates };
-        await this.saveSettings();
+    private mutate(update: (current: MPSettings) => MPSettings): Promise<void> {
+        const write = this.writes.then(async () => {
+            const next = update(this.getSettings());
+            await this.storage.saveData(next);
+            this.settings = next;
+            for (const listener of this.listeners) {
+                try { listener(this.getSettings()); }
+                catch (error) { console.error('配置变更通知失败', error); }
+            }
+        });
+        this.writes = write.catch(() => undefined);
+        return write;
     }
 
-    // Account management
     getAccount(accountId: string): WechatAccount | undefined {
-        return this.settings.wechatAccounts.find(a => a.id === accountId);
+        return this.getSettings().wechatAccounts.find(account => account.id === accountId);
     }
 
     getDefaultAccount(): WechatAccount | undefined {
-        if (!this.settings.defaultAccountId) {
-            return this.settings.wechatAccounts[0];
-        }
-        return this.getAccount(this.settings.defaultAccountId) || this.settings.wechatAccounts[0];
+        return this.getAccount(this.settings.defaultAccountId) || this.getSettings().wechatAccounts[0];
     }
 
-    async addAccount(account: WechatAccount): Promise<void> {
-        this.settings = {
-            ...this.settings,
-            wechatAccounts: [...this.settings.wechatAccounts, account],
-        };
-        if (!this.settings.defaultAccountId) {
-            this.settings.defaultAccountId = account.id;
-        }
-        await this.saveSettings();
+    addAccount(account: WechatAccount): Promise<void> {
+        const value = structuredClone(account);
+        return this.mutate(current => {
+            if (!isAccount(value) || current.wechatAccounts.some(item => item.id === value.id)) throw new Error('公众号配置无效或已存在。');
+            return { ...current, wechatAccounts: [...current.wechatAccounts, value], defaultAccountId: current.defaultAccountId || value.id };
+        });
     }
 
-    async updateAccount(accountId: string, updates: Partial<WechatAccount>): Promise<void> {
-        this.settings = {
-            ...this.settings,
-            wechatAccounts: this.settings.wechatAccounts.map(a =>
-                a.id === accountId ? { ...a, ...updates } : a
-            ),
-        };
-        await this.saveSettings();
+    updateAccount(accountId: string, updates: Partial<WechatAccount>): Promise<void> {
+        const patch = structuredClone(updates);
+        return this.mutate(current => {
+            if (!current.wechatAccounts.some(account => account.id === accountId)) throw new Error('公众号不存在。');
+            return { ...current, wechatAccounts: current.wechatAccounts.map(account => account.id === accountId ? { ...account, ...patch, id: accountId } : account) };
+        });
     }
 
-    async deleteAccount(accountId: string): Promise<void> {
-        const accounts = this.settings.wechatAccounts.filter(a => a.id !== accountId);
-        const updates: Partial<MPSettings> = { wechatAccounts: accounts };
-        if (this.settings.defaultAccountId === accountId) {
-            updates.defaultAccountId = accounts[0]?.id || '';
-        }
-        this.settings = { ...this.settings, ...updates };
-        await this.saveSettings();
+    deleteAccount(accountId: string): Promise<void> {
+        return this.mutate(current => {
+            const accounts = current.wechatAccounts.filter(account => account.id !== accountId);
+            return { ...current, wechatAccounts: accounts,
+                defaultAccountId: current.defaultAccountId === accountId ? accounts[0]?.id || '' : current.defaultAccountId,
+                lastSelectedAccountId: current.lastSelectedAccountId === accountId ? '' : current.lastSelectedAccountId };
+        });
     }
 
-    async setDefaultAccount(accountId: string): Promise<void> {
-        this.settings = { ...this.settings, defaultAccountId: accountId };
-        await this.saveSettings();
+    setDefaultAccount(accountId: string): Promise<void> {
+        return this.mutate(current => {
+            if (!current.wechatAccounts.some(account => account.id === accountId)) throw new Error('公众号不存在。');
+            return { ...current, defaultAccountId: accountId };
+        });
     }
+}
+
+function text(value: unknown, fallback = ''): string { return typeof value === 'string' ? value : fallback; }
+function positive(value: unknown, fallback: number): number {
+    return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : fallback;
+}
+function isAccount(value: unknown): value is WechatAccount {
+    return record(value) && ['id', 'name', 'appId', 'appSecret'].every(key => typeof value[key] === 'string');
+}
+function isTheme(value: unknown): value is StructuredTheme {
+    return matchesShape(value, builtinStructuredThemes[0]);
+}
+function matchesShape(value: unknown, template: unknown): boolean {
+    if (Array.isArray(template)) return Array.isArray(value) && value.every(item => typeof item === 'string');
+    if (record(template)) return record(value) && Object.entries(template).every(([key, item]) => matchesShape(value[key], item));
+    return typeof value === typeof template;
 }

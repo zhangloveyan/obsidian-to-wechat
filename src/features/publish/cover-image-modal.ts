@@ -1,9 +1,10 @@
-import { App, Modal, Notice, MarkdownView, TFile } from 'obsidian';
+import { App, Modal, Notice, TFile } from 'obsidian';
 import type WechatPublisherPlugin from '../../plugin';
-import { extractImagePathsFromMarkdown, isRemoteOrDataImage, normalizeImagePath, resolveImageFile } from '../../integrations/wechat/image-path-resolver';
 import { CoverCropModal } from './cover-crop-modal';
 import { imageBlob } from './cover-crop-image';
 import type { CoverImageSource } from './cover-crop-image';
+import type { RenderedArticle } from '../../core/render/render-types';
+import type { SelectedCover } from './publish-service';
 
 interface ArticleImage {
     displayUrl: string;
@@ -26,9 +27,9 @@ export class CoverImageModal extends Modal {
     constructor(
         app: App,
         private plugin: WechatPublisherPlugin,
-        private markdownView: MarkdownView,
+        private article: RenderedArticle,
         private accountId: string,
-        private onImageSelected: (mediaId: string, url: string) => void,
+        private onImageSelected: (cover: SelectedCover) => void,
     ) {
         super(app);
     }
@@ -143,12 +144,11 @@ export class CoverImageModal extends Modal {
             const source = localSource || (file ? { data: await this.app.vault.readBinary(file), name: file.name } : undefined);
             if (!this.alive || request !== this.selectionVersion) return;
             if (!source) throw new Error('请先选择封面图片。');
+            const session = this.plugin.wechatPublisher.createSession(this.accountId);
             const modal = new CoverCropModal(this.app, source, async cover => {
-                this.plugin.wechatPublisher.switchAccount(this.accountId);
-                const mediaId = await this.plugin.wechatPublisher.uploadImageToWechat(cover.data, cover.name);
-                if (!mediaId) throw new Error('封面上传失败，裁剪结果已保留，请重试。');
+                const result = await session.upload(cover.data, cover.name);
                 if (!this.alive || this.cropModal !== modal || !modal.isActive) return;
-                this.onImageSelected(mediaId, cover.displayUrl);
+                this.onImageSelected({ accountId: session.account.id, appId: session.account.appId, mediaId: result.media_id, previewUrl: cover.displayUrl });
                 this.close();
             }, () => {
                 if (this.cropModal === modal) this.cropModal = undefined;
@@ -166,11 +166,11 @@ export class CoverImageModal extends Modal {
 
     private resolveArticleImages(): ArticleImage[] {
         const result: ArticleImage[] = [];
-        const sourceFile = this.markdownView.file;
-        for (const rawPath of extractImagePathsFromMarkdown(this.markdownView.getViewData())) {
-            if (isRemoteOrDataImage(rawPath) || !sourceFile) continue;
-            const resolved = resolveImageFile(this.app, normalizeImagePath(rawPath), sourceFile.path);
-            if (resolved.file) result.push({ displayUrl: this.app.vault.getResourcePath(resolved.file), file: resolved.file });
+        for (const image of Array.from(this.article.element.querySelectorAll<HTMLImageElement>('img[data-otw-vault-path]'))) {
+            const file = this.app.vault.getAbstractFileByPath(image.dataset.otwVaultPath || '');
+            if (file instanceof TFile && !result.some(item => item.file === file)) {
+                result.push({ displayUrl: this.app.vault.getResourcePath(file), file });
+            }
         }
         return result;
     }

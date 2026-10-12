@@ -1,3 +1,4 @@
+@import 'cropperjs/dist/cropper.css';
 @import url('./view/layout.css');
 @import url('./view/preview.css');
 @import url('./settings/settings.css');

@@ -126,12 +126,11 @@ function sendText(res, status, text) {
 }
 
 function renderSvg(prompt, taskId, model) {
-  const escapedPrompt = escapeXml(prompt);
   const escapedTaskId = escapeXml(taskId);
   const escapedModel = escapeXml(model);
-  const promptLines = wrapText(escapedPrompt, 32).slice(0, 6);
+  const promptLines = wrapText(prompt, 32).slice(0, 6);
   const promptTspans = promptLines
-    .map((line, index) => `<tspan x="64" dy="${index === 0 ? 0 : 34}">${line}</tspan>`)
+    .map((line, index) => `<tspan x="64" dy="${index === 0 ? 0 : 34}">${escapeXml(line)}</tspan>`)
     .join('');
 
   return `<?xml version="1.0" encoding="UTF-8"?>

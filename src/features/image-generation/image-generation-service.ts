@@ -3,6 +3,7 @@ import type { ImageGenerationSettings, SettingsManager } from '../settings/setti
 import { ImageGenerationClient, type GeneratedImageData } from './image-generation-client';
 import { collectImagePromptEntries, formatImagePromptLine, locatePrompt, updatePromptLine, upsertImageForPrompt } from './prompt-extractor';
 import type { PromptAnchor } from './prompt-extractor';
+import { errorMessage } from '../../shared/errors';
 
 export type ImageTaskStatus = 'idle' | 'queued' | 'generating' | 'generated' | 'failed';
 export interface ImagePromptTask {
@@ -15,6 +16,8 @@ export interface ImagePromptTask {
 }
 interface Session {
     tasks: ImagePromptTask[];
+    loaded: boolean;
+    loading?: Promise<ImagePromptTask[]>;
     queue: Promise<void>;
     listeners: Set<() => void>;
 }
@@ -36,15 +39,26 @@ export class ImageGenerationService {
 
     async getTasks(file: TFile): Promise<ImagePromptTask[]> {
         const session = this.session(file);
-        if (!session.listeners.size && !session.tasks.some(isBusy)) {
+        if (session.loaded) return session.tasks;
+        return this.reloadTasks(file);
+    }
+
+    reloadTasks(file: TFile): Promise<ImagePromptTask[]> {
+        const session = this.session(file);
+        if (session.loading) return session.loading;
+        if (session.tasks.some(isBusy)) return Promise.reject(new Error('请等待当前生成任务结束后重新读取提示词。'));
+        session.loading = this.enqueue(file, async () => {
+            this.checkActive();
             const markdown = await this.app.vault.read(file);
             session.tasks = collectImagePromptEntries(markdown).map(entry => ({
                 id: this.nextId++, anchor: { markdown, lineIndex: entry.lineIndex },
                 prompt: entry.prompt, status: entry.imagePath ? 'generated' : 'idle',
                 detail: entry.imagePath || '', imagePath: entry.imagePath,
             }));
-        }
-        return session.tasks;
+            session.loaded = true;
+            this.notify(file);
+        }).then(() => session.tasks).finally(() => { session.loading = undefined; });
+        return session.loading;
     }
 
     subscribe(file: TFile, listener: () => void): () => void {
@@ -90,23 +104,25 @@ export class ImageGenerationService {
                 savedPath = await this.saveImage(file, image);
                 task.detail = '正在回写文章';
                 this.notify(file);
+                let anchor = task.anchor;
+                const relative = articleRelativePath(file, savedPath);
                 await this.app.vault.process(file, markdown => {
                     this.checkActive();
                     const entry = locatePrompt(markdown, task.anchor);
                     if (entry.prompt !== value) throw new Error('提示词已修改，生成结果未写入文章。');
                     const original = collectImagePromptEntries(task.anchor.markdown).find(item => item.lineIndex === task.anchor.lineIndex);
                     if (entry.imagePath !== original?.imagePath) throw new Error('关联图片已修改，生成结果未覆盖原图片。');
-                    const relative = articleRelativePath(file, savedPath!);
                     const result = upsertImageForPrompt(markdown, entry.lineIndex, '![](<'+ relative + '>)');
-                    task.anchor = { markdown: result, lineIndex: entry.lineIndex };
-                    task.imagePath = relative;
+                    anchor = { markdown: result, lineIndex: entry.lineIndex };
                     return result;
                 });
+                task.anchor = anchor;
+                task.imagePath = relative;
                 task.status = 'generated';
                 task.detail = task.imagePath || savedPath;
             } catch (error) {
                 task.status = 'failed';
-                task.detail = formatError(error) + (savedPath ? ' 图片已保留：' + savedPath : '');
+                task.detail = errorMessage(error) + (savedPath ? ' 图片已保留：' + savedPath : '');
             } finally {
                 this.notify(file);
             }
@@ -127,7 +143,7 @@ export class ImageGenerationService {
     private session(file: TFile): Session {
         let session = this.sessions.get(file);
         if (!session) {
-            session = { tasks: [], queue: Promise.resolve(), listeners: new Set() };
+            session = { tasks: [], loaded: false, queue: Promise.resolve(), listeners: new Set() };
             this.sessions.set(file, session);
         }
         return session;
@@ -159,7 +175,10 @@ export class ImageGenerationService {
         let current = '';
         for (const part of folder.split('/')) {
             current = current ? current + '/' + part : part;
-            if (!(await this.app.vault.adapter.exists(current))) await this.app.vault.createFolder(current);
+            if (!(await this.app.vault.adapter.exists(current))) {
+                try { await this.app.vault.createFolder(current); }
+                catch (error) { if (!(await this.app.vault.adapter.exists(current))) throw error; }
+            }
         }
         this.checkActive();
         const path = folder + '/file-' + Date.now() + '-' + crypto.randomUUID().slice(0, 8) + image.extension;
@@ -168,7 +187,10 @@ export class ImageGenerationService {
     }
 
     private notify(file: TFile): void {
-        for (const listener of this.session(file).listeners) listener();
+        for (const listener of this.session(file).listeners) {
+            try { listener(); }
+            catch (error) { console.error('生图状态更新失败：' + errorMessage(error)); }
+        }
     }
 
     private checkActive(): void {
@@ -182,7 +204,4 @@ export function isBusy(task: ImagePromptTask): boolean {
 function articleRelativePath(file: TFile, path: string): string {
     const index = file.path.lastIndexOf('/');
     return index < 0 ? path : path.slice(index + 1);
-}
-function formatError(error: unknown): string {
-    return error instanceof Error ? error.message : String(error);
 }

@@ -38,10 +38,12 @@ No release matches your manifest version
    - `package-lock.json`
    - `versions.json`
 
-2. 构建并确认产物：
+2. 运行完整检查并确认产物（本机安装 Chrome，或设置 `PLAYWRIGHT_CHANNEL`）：
 
    ```bash
-   npm run build
+   npm ci
+   npm run check
+   npm audit --audit-level=high
    ```
 
 3. 更新 `docs/release-notes.md`（当前版本的中英文更新说明，Release 工作流会读取此文件），并按需同步中英文 README 的功能用法。提交代码，暂不推送默认分支。
@@ -70,4 +72,6 @@ No release matches your manifest version
 
 - Obsidian 插件 Release tag 不能带 `v` 前缀。
 - tag 必须和 `manifest.json.version` 完全一致。
+- CI 和 Release 工作流都执行 `npm run check`；Release 还核对实际 tag，不匹配则停止。运行时导入的样例 Markdown、图片必须一同提交，不能只保存在被忽略的本地目录。
+- 构建会统一内联文本资源的换行符，避免 Windows 与 Linux 构建产物不一致。不要手动修改 `main.js` 或 `styles.css`。
 - 如果误推了 `v0.1.6`，需要删除错误 tag，并重新推送 `0.1.6`。

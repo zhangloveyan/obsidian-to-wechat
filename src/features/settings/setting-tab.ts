@@ -5,6 +5,7 @@ import { ThemeEditorModal } from '../theme-editor/theme-editor-modal';
 import { testImageGenerationAndSaveImage } from '../image-generation/image-generation-test';
 import { IMAGE_PROMPT_FORMAT } from '../image-generation/prompt-extractor';
 import type WechatPublisherPlugin from '../../plugin';
+import { errorMessage } from '../../shared/errors';
 
 export class WechatSettingTab extends PluginSettingTab {
     plugin: WechatPublisherPlugin;
@@ -43,6 +44,19 @@ export class WechatSettingTab extends PluginSettingTab {
             .setName('图片生成配置')
             .setHeading();
         this.renderImageGenerationSettings(containerEl);
+        new Setting(containerEl)
+            .setName('图片上传缓存')
+            .setDesc('已缓存 ' + this.plugin.imageCache.size + ' 张图片。清理不会删除本地图片或微信素材。')
+            .addButton(button => button.setButtonText('清理缓存').onClick(() => {
+                button.setDisabled(true);
+                void this.plugin.imageCache.clear().then(() => {
+                    new Notice('图片上传缓存已清理');
+                    this.display();
+                }).catch(error => {
+                    new Notice('清理失败：' + errorMessage(error));
+                    button.setDisabled(false);
+                });
+            }));
     }
 
     private renderAccountList(containerEl: HTMLElement) {
@@ -74,7 +88,7 @@ export class WechatSettingTab extends PluginSettingTab {
                             const result = await this.plugin.wechatPublisher.testConnection(account.appId, account.appSecret);
                             new Notice(`${account.name}：${result.message}`, result.ok ? 5000 : 10000);
                         } catch (error: unknown) {
-                            const message = error instanceof Error ? error.message : String(error || '未知错误');
+                            const message = errorMessage(error);
                             new Notice(`${account.name}：测试异常 — ${message}`, 10000);
                         } finally {
                             btn.setButtonText('测试默认账号').setDisabled(false);
@@ -117,7 +131,7 @@ export class WechatSettingTab extends PluginSettingTab {
                             );
                             new Notice(`图片生成接口测试成功，测试图片已保存：${path}`, 10000);
                         } catch (error) {
-                            const message = error instanceof Error ? error.message : String(error || '未知错误');
+                            const message = errorMessage(error);
                             new Notice(`图片生成接口测试失败：${message}`, 12000);
                         } finally {
                             btn.setButtonText('测试接口').setDisabled(false);

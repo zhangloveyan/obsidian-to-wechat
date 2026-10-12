@@ -17,7 +17,7 @@ export async function testImageGenerationAndSaveImage(
 }
 
 async function nextTempImagePath(app: App, plugin: WechatPublisherPlugin, extension: string): Promise<string> {
-    const folder = `${plugin.manifest.dir || '.obsidian/plugins/markdown-wechat-publisher'}/temp`;
+    const folder = `${plugin.manifest.dir || app.vault.configDir + '/plugins/' + plugin.manifest.id}/temp`;
     const safeExtension = extension.startsWith('.') ? extension : `.${extension}`;
     const baseName = `image-generation-test-${formatDate(new Date())}`;
     let candidate = `${folder}/${baseName}${safeExtension}`;

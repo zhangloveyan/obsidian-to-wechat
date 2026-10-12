@@ -55,7 +55,7 @@ export async function prepareCoverImage(source: CoverImageSource): Promise<{ url
         throw new Error(`无法读取图片 ${source.name}，请检查文件是否损坏或转换为 PNG/JPEG 后重试。`);
     }
     const { width, height } = bitmap;
-    const canvas = document.createElement('canvas');
+    const canvas = document.win.createEl('canvas');
     try {
         if (width < 47 || height < 20) throw new Error('图片尺寸太小，封面至少需要 47 × 20 像素。');
         canvas.width = width;

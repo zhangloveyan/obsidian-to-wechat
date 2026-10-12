@@ -2,6 +2,7 @@
 *.log
 npm-debug.log*
 data.json
+image-cache.json
 
 # Dependency directories
 node_modules/
@@ -27,5 +28,9 @@ Thumbs.db
 
 # other
 dist/
+/output/
 skills/
-docs/
+docs/*
+!docs/refactor-plan.md
+!docs/Markdown样式全量测试文章.md
+!docs/image-03-28-114241.jpg

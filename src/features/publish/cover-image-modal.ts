@@ -1,266 +1,193 @@
 import { App, Modal, Notice, MarkdownView, TFile } from 'obsidian';
 import type WechatPublisherPlugin from '../../plugin';
 import { extractImagePathsFromMarkdown, isRemoteOrDataImage, normalizeImagePath, resolveImageFile } from '../../integrations/wechat/image-path-resolver';
+import { CoverCropModal } from './cover-crop-modal';
+import { imageBlob } from './cover-crop-image';
+import type { CoverImageSource } from './cover-crop-image';
 
 interface ArticleImage {
-    rawPath: string;
     displayUrl: string;
     file: TFile;
 }
 
 export class CoverImageModal extends Modal {
-    plugin: WechatPublisherPlugin;
-    markdownView: MarkdownView;
-    accountId: string;
-    selectedMediaId = '';
-    selectedDisplayUrl = '';
-    onImageSelected: (mediaId: string, url: string) => void;
+    private alive = false;
+    private activeTab: 'article' | 'local' = 'article';
+    private localSource?: CoverImageSource;
+    private localPreviewUrl?: string;
+    private selectedArticleImage?: TFile;
+    private readingLocal = false;
+    private openingCrop = false;
+    private localReadVersion = 0;
+    private selectionVersion = 0;
+    private cropModal?: CoverCropModal;
+    private confirmButton!: HTMLButtonElement;
 
-    private localFileInput: HTMLInputElement | null = null;
-    private localFileData: ArrayBuffer | null = null;
-    private localFileName = '';
-    private localDataUrl = '';
-    private selectedArticleImage: TFile | null = null;
-
-    constructor(app: App, plugin: WechatPublisherPlugin, markdownView: MarkdownView, accountId: string, onImageSelected: (mediaId: string, url: string) => void) {
+    constructor(
+        app: App,
+        private plugin: WechatPublisherPlugin,
+        private markdownView: MarkdownView,
+        private accountId: string,
+        private onImageSelected: (mediaId: string, url: string) => void,
+    ) {
         super(app);
-        this.plugin = plugin;
-        this.markdownView = markdownView;
-        this.accountId = accountId;
-        this.onImageSelected = onImageSelected;
     }
 
-    async onOpen() {
+    onOpen(): void {
+        this.alive = true;
         const { contentEl } = this;
         contentEl.empty();
         contentEl.addClass('otw-cover-modal');
-
-        const modalEl = this.containerEl.querySelector('.modal') as HTMLElement;
-        if (modalEl) modalEl.classList.add('mod-wechat-cover');
-
+        this.modalEl.addClass('mod-wechat-cover');
         contentEl.createEl('h2', { text: '选择封面图' });
 
-        // Tabs
         const tabsContainer = contentEl.createDiv({ cls: 'otw-modal-tabs' });
         const articleTab = tabsContainer.createDiv({ cls: 'otw-modal-tab active', text: '文章图片' });
         const localTab = tabsContainer.createDiv({ cls: 'otw-modal-tab', text: '本地图片' });
-
         const contentContainer = contentEl.createDiv({ cls: 'otw-modal-content' });
         const articleContent = contentContainer.createDiv({ cls: 'otw-modal-article-content' });
         const localContent = contentContainer.createDiv({ cls: 'otw-modal-local-content otw-modal-content-hidden' });
-        let updateConfirmState = () => {};
-
-        // Resolve article images
         const articleImages = this.resolveArticleImages();
-
         const imageGrid = articleContent.createDiv({ cls: 'otw-modal-image-grid' });
-        const emptyMsg = articleContent.createDiv({ cls: 'otw-modal-empty-msg', text: '文章中暂无图片，请从本地选择' });
-
-        if (articleImages.length > 0) {
-            emptyMsg.remove();
-            for (const imgInfo of articleImages) {
-                const item = imageGrid.createDiv({ cls: 'otw-modal-image-item' });
-                const img = item.createEl('img');
-                img.src = imgInfo.displayUrl;
-                const capturedImgInfo = imgInfo;
-                const capturedItem = item;
-                img.onerror = () => { capturedItem.remove(); };
-                item.addEventListener('click', () => {
-                    void (async () => {
-                    imageGrid.querySelectorAll('.otw-modal-image-item').forEach((el: HTMLElement) => el.classList.remove('otw-modal-image-selected'));
-                    capturedItem.classList.add('otw-modal-image-selected');
-                    this.selectedMediaId = 'article_' + Date.now();
-                    this.selectedArticleImage = capturedImgInfo.file;
-                    // Convert to data URL on click for reliable preview display
-                    this.selectedDisplayUrl = await this.fileToDataUrl(capturedImgInfo.file);
-                    this.localFileData = null;
-                    updateConfirmState();
-                    })();
-                });
-            }
+        if (!articleImages.length) {
+            articleContent.createDiv({ cls: 'otw-modal-empty-msg', text: '文章中暂无图片，请从本地选择' });
+        }
+        for (const image of articleImages) {
+            const item = imageGrid.createDiv({ cls: 'otw-modal-image-item' });
+            const img = item.createEl('img', { attr: { src: image.displayUrl, alt: image.file.name } });
+            img.onerror = () => {
+                item.remove();
+                if (this.selectedArticleImage === image.file) {
+                    this.selectedArticleImage = undefined;
+                    ++this.selectionVersion;
+                    this.updateConfirmState();
+                }
+            };
+            item.addEventListener('click', () => {
+                imageGrid.querySelectorAll('.otw-modal-image-item').forEach(el => el.classList.remove('otw-modal-image-selected'));
+                item.classList.add('otw-modal-image-selected');
+                this.selectedArticleImage = image.file;
+                ++this.selectionVersion;
+                this.updateConfirmState();
+            });
         }
 
-        // Local image tab
         const fileInputContainer = localContent.createDiv({ cls: 'otw-modal-file-input-container' });
-        this.localFileInput = fileInputContainer.createEl('input');
-        this.localFileInput.type = 'file';
-        this.localFileInput.accept = 'image/*';
+        const fileInput = fileInputContainer.createEl('input', { attr: { type: 'file', accept: 'image/*', 'aria-label': '本地封面图片' } });
         const imagePreview = localContent.createDiv({ cls: 'otw-modal-image-preview', text: '选择图片预览' });
-
-        this.localFileInput.addEventListener('change', (e) => {
-            const target = e.target as HTMLInputElement;
-            if (target.files && target.files.length > 0) {
-                const selectedFile = target.files[0];
-                this.localFileName = selectedFile.name;
-                this.localFileData = null;
-                updateConfirmState();
-
-                const previewReader = new FileReader();
-                previewReader.onload = (e) => {
-                    if (e.target?.result) {
-                        this.localDataUrl = e.target.result as string;
-                        imagePreview.empty();
-                        const img = imagePreview.createEl('img', { cls: 'preview-image' });
-                        img.src = this.localDataUrl;
-                        this.selectedMediaId = 'local_' + Date.now();
-                        this.selectedDisplayUrl = this.localDataUrl;
-                        this.selectedArticleImage = null;
-                    }
-                };
-                previewReader.readAsDataURL(selectedFile);
-
-                const dataReader = new FileReader();
-                dataReader.onload = (e) => {
-                    if (e.target?.result) {
-                        this.localFileData = e.target.result as ArrayBuffer;
-                        updateConfirmState();
-                    }
-                };
-                dataReader.readAsArrayBuffer(selectedFile);
-            } else {
-                imagePreview.textContent = '选择图片预览';
-                this.localFileData = null;
-                this.localDataUrl = '';
-                this.localFileName = '';
-                this.selectedMediaId = '';
-                this.selectedArticleImage = null;
-                updateConfirmState();
-            }
+        fileInput.addEventListener('change', () => {
+            void this.readLocalFile(fileInput.files?.[0], imagePreview);
         });
 
-        // Buttons
         const buttonContainer = contentEl.createDiv({ cls: 'otw-modal-buttons' });
-        const cancelButton = buttonContainer.createEl('button', { text: '取消' });
-        cancelButton.addEventListener('click', () => this.close());
-        const confirmButton = buttonContainer.createEl('button', { text: '确认', cls: 'otw-modal-btn-cta' });
-        confirmButton.disabled = true;
-
-        articleTab.addEventListener('click', () => {
-            articleTab.classList.add('active');
-            localTab.classList.remove('active');
-            articleContent.classList.remove('otw-modal-content-hidden');
-            localContent.classList.add('otw-modal-content-hidden');
-        });
-
-        localTab.addEventListener('click', () => {
-            localTab.classList.add('active');
-            articleTab.classList.remove('active');
-            articleContent.classList.add('otw-modal-content-hidden');
-            localContent.classList.remove('otw-modal-content-hidden');
-        });
-
-        updateConfirmState = () => {
-            const activeTab = articleTab.classList.contains('active') ? 'article' : 'local';
-            if (activeTab === 'article') {
-                confirmButton.disabled = !this.selectedMediaId.startsWith('article_');
-            } else {
-                confirmButton.disabled = !this.localFileData;
-            }
+        buttonContainer.createEl('button', { text: '取消' }).addEventListener('click', () => this.close());
+        this.confirmButton = buttonContainer.createEl('button', { text: '确认', cls: 'otw-modal-btn-cta' });
+        this.confirmButton.addEventListener('click', () => { void this.openCrop(); });
+        const switchTab = (tab: 'article' | 'local'): void => {
+            this.activeTab = tab;
+            ++this.selectionVersion;
+            articleTab.classList.toggle('active', tab === 'article');
+            localTab.classList.toggle('active', tab === 'local');
+            articleContent.classList.toggle('otw-modal-content-hidden', tab !== 'article');
+            localContent.classList.toggle('otw-modal-content-hidden', tab !== 'local');
+            this.updateConfirmState();
         };
-
-        // Listen for tab switches and image selections instead of polling
-        articleTab.addEventListener('click', updateConfirmState);
-        localTab.addEventListener('click', updateConfirmState);
-
-        confirmButton.addEventListener('click', () => {
-            void (async () => {
-            if (!this.selectedMediaId) { new Notice('请先选择图片'); return; }
-            confirmButton.disabled = true;
-            confirmButton.textContent = '上传中...';
-
-            const activeTab = articleTab.classList.contains('active') ? 'article' : 'local';
-
-            try {
-                this.plugin.wechatPublisher.switchAccount(this.accountId);
-
-                if (activeTab === 'local') {
-                    if (!this.localFileData) {
-                        new Notice('请先选择图片');
-                        confirmButton.disabled = false;
-                        confirmButton.textContent = '确认';
-                        return;
-                    }
-                    const mediaId = await this.plugin.wechatPublisher.uploadImageToWechat(this.localFileData, this.localFileName);
-                    if (!mediaId) {
-                        new Notice(`上传封面图失败：${this.localFileName}`);
-                        confirmButton.disabled = false;
-                        confirmButton.textContent = '确认';
-                        return;
-                    }
-                    this.onImageSelected(mediaId, this.localDataUrl);
-                    this.close();
-                    return;
-                }
-
-                if (this.selectedArticleImage) {
-                    const arrayBuffer = await this.app.vault.readBinary(this.selectedArticleImage);
-                    const mediaId = await this.plugin.wechatPublisher.uploadImageToWechat(arrayBuffer, this.selectedArticleImage.name);
-                    if (!mediaId) {
-                        new Notice(`上传封面图失败：${this.selectedArticleImage.path}`);
-                        confirmButton.disabled = false;
-                        confirmButton.textContent = '确认';
-                        return;
-                    }
-                    this.onImageSelected(mediaId, this.selectedDisplayUrl);
-                    this.close();
-                } else {
-                    new Notice('图片加载失败');
-                    confirmButton.disabled = false;
-                    confirmButton.textContent = '确认';
-                }
-            } catch (error: unknown) {
-                const message = error instanceof Error ? error.message : String(error || '未知错误');
-                new Notice('上传失败：' + message);
-                confirmButton.disabled = false;
-                confirmButton.textContent = '确认';
-            }
-            })();
-        });
+        articleTab.addEventListener('click', () => switchTab('article'));
+        localTab.addEventListener('click', () => switchTab('local'));
+        this.updateConfirmState();
     }
 
-    /** Convert TFile to base64 data URL */
-    private async fileToDataUrl(file: TFile): Promise<string> {
+    private updateConfirmState(): void {
+        if (!this.alive || !this.confirmButton) return;
+        const hasImage = this.activeTab === 'article' ? !!this.selectedArticleImage : !!this.localSource && !this.readingLocal;
+        this.confirmButton.disabled = !hasImage || this.openingCrop || !!this.cropModal;
+        this.confirmButton.setText(this.openingCrop ? '读取中...' : '确认');
+    }
+
+    private async readLocalFile(file: File | undefined, preview: HTMLElement): Promise<void> {
+        const request = ++this.localReadVersion;
+        ++this.selectionVersion;
+        this.localSource = undefined;
+        this.releasePreviewUrl();
+        this.readingLocal = !!file;
+        preview.setText(file ? '正在读取图片...' : '选择图片预览');
+        this.updateConfirmState();
+        if (!file) return;
         try {
-            const arrayBuffer = await this.app.vault.readBinary(file);
-            const bytes = new Uint8Array(arrayBuffer);
-            const ext = file.extension || 'png';
-            const mimeTypes: Record<string, string> = {
-                png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
-                gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml', bmp: 'image/bmp',
-            };
-            const mime = mimeTypes[ext] || 'image/png';
-            let binary = '';
-            for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-            return `data:${mime};base64,${btoa(binary)}`;
-        } catch {
-            return '';
+            const source = { data: await file.arrayBuffer(), name: file.name };
+            if (!this.alive || request !== this.localReadVersion) return;
+            const blob = imageBlob(source);
+            this.localSource = source;
+            this.localPreviewUrl = URL.createObjectURL(blob);
+            preview.empty();
+            preview.createEl('img', { cls: 'preview-image', attr: { src: this.localPreviewUrl, alt: file.name } });
+        } catch (error) {
+            if (!this.alive || request !== this.localReadVersion) return;
+            preview.setText(error instanceof Error ? error.message : '读取图片失败，请重新选择。');
+        } finally {
+            if (this.alive && request === this.localReadVersion) {
+                this.readingLocal = false;
+                this.updateConfirmState();
+            }
+        }
+    }
+
+    private async openCrop(): Promise<void> {
+        if (!this.alive || this.confirmButton.disabled || this.cropModal) return;
+        const request = this.selectionVersion;
+        const file = this.selectedArticleImage;
+        const localSource = this.activeTab === 'local' ? this.localSource : undefined;
+        this.openingCrop = true;
+        this.updateConfirmState();
+        try {
+            const source = localSource || (file ? { data: await this.app.vault.readBinary(file), name: file.name } : undefined);
+            if (!this.alive || request !== this.selectionVersion) return;
+            if (!source) throw new Error('请先选择封面图片。');
+            const modal = new CoverCropModal(this.app, source, async cover => {
+                this.plugin.wechatPublisher.switchAccount(this.accountId);
+                const mediaId = await this.plugin.wechatPublisher.uploadImageToWechat(cover.data, cover.name);
+                if (!mediaId) throw new Error('封面上传失败，裁剪结果已保留，请重试。');
+                if (!this.alive || this.cropModal !== modal || !modal.isActive) return;
+                this.onImageSelected(mediaId, cover.displayUrl);
+                this.close();
+            }, () => {
+                if (this.cropModal === modal) this.cropModal = undefined;
+                this.updateConfirmState();
+            });
+            this.cropModal = modal;
+            modal.open();
+        } catch (error) {
+            if (this.alive) new Notice(error instanceof Error ? error.message : '封面图片读取失败，请重试。');
+        } finally {
+            this.openingCrop = false;
+            this.updateConfirmState();
         }
     }
 
     private resolveArticleImages(): ArticleImage[] {
         const result: ArticleImage[] = [];
-        const rawPaths = extractImagePathsFromMarkdown(this.markdownView.getViewData());
         const sourceFile = this.markdownView.file;
-
-        for (const rawPath of rawPaths) {
-            if (isRemoteOrDataImage(rawPath)) {
-                continue;
-            }
-
-            if (sourceFile) {
-                const resolved = resolveImageFile(this.app, normalizeImagePath(rawPath), sourceFile.path);
-                if (resolved.file) {
-                    const resourcePath = this.app.vault.getResourcePath(resolved.file);
-                    result.push({ rawPath, displayUrl: resourcePath, file: resolved.file });
-                    continue;
-                }
-            }
+        for (const rawPath of extractImagePathsFromMarkdown(this.markdownView.getViewData())) {
+            if (isRemoteOrDataImage(rawPath) || !sourceFile) continue;
+            const resolved = resolveImageFile(this.app, normalizeImagePath(rawPath), sourceFile.path);
+            if (resolved.file) result.push({ displayUrl: this.app.vault.getResourcePath(resolved.file), file: resolved.file });
         }
-
         return result;
     }
 
-    onClose() {
+    private releasePreviewUrl(): void {
+        if (this.localPreviewUrl) URL.revokeObjectURL(this.localPreviewUrl);
+        this.localPreviewUrl = undefined;
+    }
+
+    onClose(): void {
+        this.alive = false;
+        ++this.localReadVersion;
+        ++this.selectionVersion;
+        this.cropModal?.close();
+        this.cropModal = undefined;
+        this.releasePreviewUrl();
+        this.localSource = undefined;
         this.contentEl.empty();
     }
 }

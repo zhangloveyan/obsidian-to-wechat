@@ -1,24 +1,25 @@
 # Markdown WeChat Publisher
 
-Preview, style, copy, and publish Markdown notes from Obsidian to WeChat Official Accounts.
+Format articles, generate images, and publish drafts to WeChat Official Accounts without leaving your local Markdown workflow in Obsidian.
 
 [中文文档](README.md)
 
 ## Features
 
-- Publish local Obsidian notes to WeChat: preview Markdown formatting in Obsidian, copy rendered content to the WeChat editor, or publish notes to the WeChat draft box.
-- Visual style editor: use built-in article themes and adjust headings, paragraphs, quotes, code blocks, images, tables, and other styles.
-- Multiple WeChat Official Accounts: configure multiple accounts and choose the target account before publishing.
-- APIMart image generation: generate article images from fixed `image-prompt` comments, save the images locally, and replace the prompts in the article.
+- Publish local notes to WeChat: preview Markdown formatting, copy rendered content, or send it to the WeChat draft box. Choose an article or local image and crop it to a 2.35:1 cover.
+- Visual style editor: choose a built-in theme and adjust headings, paragraphs, quotes, code blocks, images, and tables with a live preview.
+- Multiple WeChat Official Accounts: manage accounts in one place and select the target before publishing, without repeatedly changing credentials.
+- APIMart image generation: generate individual images or a batch from prompts in your note. Edit prompts, track progress, and regenerate images, with results saved locally and inserted into the article.
+
+![Article preview and theme selection](pic/README/image-20260624125418855.png)
 
 ## Installation
 
 ### Install from the community plugin marketplace
 
-1. Open Obsidian settings.
-2. Go to `Community plugins` and turn off restricted mode.
-3. Click `Browse` and search for `Markdown WeChat Publisher`.
-4. Install and enable the plugin.
+1. Open `Settings > Community plugins` in Obsidian and follow the prompt to enable community plugins.
+2. Click `Browse` and search for `Markdown WeChat Publisher`.
+3. Install and enable the plugin.
 
 Plugin marketplace page:
 [Markdown WeChat Publisher](https://community.obsidian.md/plugins/markdown-wechat-publisher)
@@ -27,69 +28,49 @@ Plugin marketplace page:
 
 ### Manual installation
 
-1. Download the latest release files:
-   - `main.js`
-   - `manifest.json`
-   - `styles.css`
-2. Create this folder in your vault:
+Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/zhangloveyan/obsidian-to-wechat/releases/latest). Place them in `.obsidian/plugins/markdown-wechat-publisher` inside your vault, reload Obsidian, and enable the plugin. Use your custom configuration directory instead of `.obsidian` if you have changed it.
 
-   ```text
-   .obsidian/plugins/markdown-wechat-publisher
-   ```
-
-   ![Manual plugin folder](pic/README/image-20260624125227093.png)
-
-3. Put the three files into that folder.
-4. Restart Obsidian.
-5. Enable `Markdown WeChat Publisher` in `Settings > Community plugins`.
+![Manual plugin folder](pic/README/image-20260624125227093.png)
 
 ## Setup
 
-Open `Settings > Markdown WeChat Publisher` and add a WeChat Official Account.
+Open `Settings > Markdown WeChat Publisher`:
 
-Each account requires:
-
-- Account name
-- App ID
-- App secret
-
-You can test the connection after entering the account credentials.
+- Account settings: enter an account name, App ID, and App secret, test the connection, and choose a default account. Sending drafts requires the corresponding WeChat API permissions. Copying formatted content does not require account setup.
+- Image generation settings (optional): enter the APIMart API URL, key, and model, then choose an aspect ratio and resolution and set the timeout and polling interval. Skip this setup if you do not use image generation.
 
 ![WeChat account settings](pic/README/image-20260624125323186.png)
 
-### Image generation
+## Quick start
 
-The plugin can generate images from fixed prompt comments in Markdown:
+1. Open a Markdown note.
+2. Open the preview from the ribbon icon, or press `Ctrl+P` and search for `Markdown WeChat Publisher` in the command palette.
+3. Choose a theme and adjust its styles in the theme editor as needed.
+4. To add images, insert prompt comments and click the image generation button (`生图`).
+5. Click Copy (`复制`) and paste into the WeChat editor, or click Publish (`发布`), choose the account, confirm the title and cover, and send the article to the draft box.
+
+Selecting a cover opens a crop dialog. Drag and zoom the image within a fixed 2.35:1 frame, then click Apply to upload the crop. The original image and note remain unchanged; going back or cancelling does not replace the previous cover.
+
+The plugin creates WeChat drafts. It does not broadcast articles to subscribers.
+
+## Image generation
+
+Put each prompt comment on its own line, keeping the entire comment on a single line:
 
 ```markdown
 <!-- image-prompt: A clean blue technology cover image for a WeChat article -->
 ```
 
-Configure the image generation API URL, API key, model, aspect ratio, resolution, timeout, and polling interval in plugin settings.
+In the image generation dialog, edit prompts, generate one image or start all tasks, and check each image's status. Edited prompts are written back to the note when generation starts.
 
-## Usage
-
-1. Open a Markdown note.
-2. Open the plugin preview from the ribbon icon, or press `Ctrl+P` and search for `Markdown WeChat Publisher` in the command palette.
-3. Choose a theme and check the preview.
-4. Generate article images when the note contains `image-prompt` comments.
-5. Copy the rendered content to the WeChat editor, or publish it to the WeChat draft box.
-
-When publishing, choose an article image or a local image as the cover, then drag and zoom to crop it at a fixed 2.35:1 ratio. Applying the crop uploads the cover without changing the original image or note.
-
-## Screenshots
-
-![Plugin preview](pic/README/image-20260624125418855.png)
+Images are saved under `pic/<note name>/` beside the note, and the image link is inserted or updated on the line immediately after its prompt. The prompt comment stays in the note but is hidden in the article preview, so you can reopen the dialog and regenerate the image later.
 
 ## Privacy
 
-Account credentials and plugin settings are stored in the current Obsidian vault.
-
-When publishing, the plugin connects to the configured WeChat Official Account API to fetch access tokens, upload images, and create drafts.
-
-When image generation is enabled, image prompts are sent to the configured image generation API.
-
-The plugin does not send article content to other third-party services unless you explicitly configure and use those services.
+- Account credentials, settings, and uploaded-image cache are stored in the current Obsidian vault. Do not publish configuration files containing secrets.
+- Publishing sends articles and images to WeChat. Image generation sends prompts to the configured image generation service.
+- Remote images are loaded from their source URLs. Exporting mathematical formulas as images sends their content to the CodeCogs rendering service.
+- Cover cropping runs locally. A cropped cover is uploaded to WeChat only when you apply it.
 
 ## Development
 
@@ -100,4 +81,4 @@ npm run build
 
 ## License
 
-AGPL-3.0
+[AGPL-3.0](LICENSE)

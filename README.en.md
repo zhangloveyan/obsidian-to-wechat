@@ -1,28 +1,15 @@
 # Markdown WeChat Publisher
 
-Markdown WeChat Publisher is an Obsidian plugin for WeChat Official Account authors. It connects local Markdown writing with article formatting, AI image generation, and draft publishing. Keep writing and organizing assets in your own vault while handling most publishing preparation in Obsidian, with less switching between your notes, formatting tools, and the WeChat dashboard.
-
-Once an article is ready, choose a theme and preview it, adjust styles, generate illustrations, and crop a cover before sending it to the selected account's draft box. You can also use formatting and copying on their own, then continue editing in WeChat. Your Markdown source stays local, and you remain responsible for the final review and broadcast from the WeChat dashboard.
+Markdown WeChat Publisher is an Obsidian plugin for previewing, styling, copying, and sending Markdown to the WeChat draft box, with custom themes, multiple account management, and AI image generation.
 
 [中文文档](README.md)
 
 ## Features
 
-### Publish local notes to WeChat
-
-Use an Obsidian note as your article source, preview its formatting, then copy it to the WeChat editor or send it with its images to the draft box. Choose a cover from the article or a local file, and drag and zoom to crop it at a fixed 2.35:1 ratio without changing the original image. GitHub-style syntax highlighting, Mac-style code blocks, and line numbers make the plugin useful for tutorials, technical notes, and practical guides.
-
-### Visual style editor
-
-Start with a built-in theme such as Default, Classic, Minimal, Orange Heart, Elegant, Royal Blue, or Academic, or create your own article theme. Adjust font sizes, colors, spacing, and styles for headings, paragraphs, quotes, code blocks, images, and tables with a live preview, so your articles share a consistent visual style.
-
-### Multiple WeChat Official Accounts
-
-Manage account names and credentials in one place, test connections, and set a default account. Select the target account before publishing without repeatedly entering an App ID and App secret, whether you maintain personal, work, or topic-specific accounts.
-
-### APIMart image generation
-
-Mark image positions and descriptions with `image-prompt` comments in your note. Edit prompts together in the generation dialog, generate one image or start a batch, and follow task progress. Regenerate images that need another attempt; results are saved locally and their links are updated in the article, while prompt comments remain available for later edits.
+- Publish local notes to WeChat: preview Markdown formatting, copy it to the WeChat editor, or send it with local and remote images to the draft box. Drag and zoom a selected cover to crop it at 2.35:1 without changing the original image.
+- Visual style editor: use built-in themes or create custom ones, with live adjustments for headings, paragraphs, quotes, code blocks, images, and tables. Code blocks include GitHub-style highlighting, Mac-style headers, and line numbers.
+- Multiple WeChat Official Accounts: configure accounts together, test connections, and set a default. Select the target before publishing without repeatedly entering an App ID and App secret.
+- APIMart image generation: describe images with `image-prompt` comments, edit prompts, generate individual images or batches, track progress, and regenerate results. Images are saved locally and inserted into the article; prompts remain available for later edits.
 
 ![Article preview and theme selection](pic/README/image-20260624125418855.png)
 

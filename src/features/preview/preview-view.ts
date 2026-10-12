@@ -6,6 +6,7 @@ import type { ThemeManager } from '../../core/theme/theme-service';
 import type WechatPublisherPlugin from '../../plugin';
 import { showPublishModal } from '../publish/platform-index';
 import { ArticleImageGenerationModal } from '../image-generation/article-image-generation-modal';
+import { PLUGIN_ICON_ID } from '../../shared/plugin-icon';
 
 export const VIEW_TYPE_PREVIEW = 'otw-preview';
 
@@ -43,7 +44,7 @@ export class PreviewView extends ItemView {
 
     getViewType() { return VIEW_TYPE_PREVIEW; }
     getDisplayText() { return '预览'; }
-    getIcon() { return 'panel-right'; }
+    getIcon() { return PLUGIN_ICON_ID; }
 
     async onOpen() {
         const container = this.containerEl.children[1] as HTMLElement;

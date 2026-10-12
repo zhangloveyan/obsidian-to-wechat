@@ -1,4 +1,4 @@
-import { Plugin, TFile } from 'obsidian';
+import { addIcon, Plugin, removeIcon, TFile } from 'obsidian';
 import { PreviewView, VIEW_TYPE_PREVIEW } from './features/preview/preview-view';
 import { ThemeManager } from './core/theme/theme-service';
 import { SettingsManager } from './features/settings/settings';
@@ -7,6 +7,7 @@ import { WechatSettingTab } from './features/settings/setting-tab';
 import { WechatPublisher } from './integrations/wechat/wechat-publisher';
 import { createLogger, Logger } from './shared/logger';
 import { WechatAccount } from './features/settings/settings';
+import { PLUGIN_ICON_ID, PLUGIN_ICON_SVG } from './shared/plugin-icon';
 
 export default class WechatPublisherPlugin extends Plugin {
     settingsManager: SettingsManager;
@@ -33,12 +34,15 @@ export default class WechatPublisherPlugin extends Plugin {
         this.wechatPublisher = new WechatPublisher(this);
         this.logger.debug('Wechat publisher initialized');
 
+        addIcon(PLUGIN_ICON_ID, PLUGIN_ICON_SVG);
+        this.register(() => removeIcon(PLUGIN_ICON_ID));
+
         this.registerView(
             VIEW_TYPE_PREVIEW,
             (leaf) => new PreviewView(leaf, this.themeManager, this.settingsManager, this),
         );
 
-        this.addRibbonIcon('pen-tool', '打开预览', () => {
+        this.addRibbonIcon(PLUGIN_ICON_ID, '打开预览', () => {
             void this.activateView();
         });
 
